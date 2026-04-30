@@ -3,17 +3,37 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "clean": "rm -rf .next",
+    "dev": "next dev --webpack",
+    "dev:user": "next dev --webpack --hostname 127.0.0.1 --port 3000",
+    "dev:qa": "next dev --webpack --hostname 127.0.0.1 --port 3100",
+    "dev:turbopack": "next dev",
+    "dev:stable": "npm run clean && npm run build && npm run start:user",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "start:user": "next start --hostname 127.0.0.1 --port 3000",
+    "start:qa": "next start --hostname 127.0.0.1 --port 3100",
+    "qa:server": "npm run build && npm run start:qa",
+    "lint": "eslint",
+    "check:planner": "tsx scripts/planner-regression-check.ts",
+    "measure:planner-ai-latency": "tsx scripts/planner-ai-latency-benchmark.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:qa": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 playwright test",
+    "test:e2e:qa:headed": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 PLAYWRIGHT_HEADED=1 playwright test",
+    "test:e2e:qa:real-ai": "OPENAI_API_KEY=\"${OPENAI_API_KEY:-$(sed -n 's/^OPENAI_API_KEY=//p' .env.local | head -n 1)}\" PLAYWRIGHT_REAL_AI=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 playwright test tests/e2e/planner.real-ai.spec.ts",
+    "test:e2e:qa:real-ai:clean": "rm -rf .next && OPENAI_API_KEY=\"${OPENAI_API_KEY:-$(sed -n 's/^OPENAI_API_KEY=//p' .env.local | head -n 1)}\" PLAYWRIGHT_REAL_AI=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 playwright test tests/e2e/planner.real-ai.spec.ts",
+    "test:e2e:qa:real-ai:headed": "OPENAI_API_KEY=\"${OPENAI_API_KEY:-$(sed -n 's/^OPENAI_API_KEY=//p' .env.local | head -n 1)}\" PLAYWRIGHT_REAL_AI=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 PLAYWRIGHT_HEADED=1 playwright test tests/e2e/planner.real-ai.spec.ts",
+    "test:e2e:shared": "PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 playwright test",
+    "qa:m5": "npm run check:planner && npm run test:e2e:qa && npm run build"
   },
   "dependencies": {
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -22,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

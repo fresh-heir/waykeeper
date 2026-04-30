@@ -1,26 +1,439 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --wk-ink: #0e1433;
+  --wk-ink-muted: #354062;
+  --wk-cobalt: #2838e4;
+  --wk-ultramarine: #252aa8;
+  --wk-periwinkle: #aebcff;
+  --wk-amethyst: #7758d8;
+  --wk-jade: #29b98f;
+  --wk-verdigris: #1b8f82;
+  --wk-spectral-cyan: #4be0ca;
+  --wk-cyan-soft: #9deee6;
+  --wk-chartreuse: #dfff55;
+  --wk-coral: #ff4984;
+  --wk-ruby: #db2457;
+  --wk-pearl: #fff7d6;
+  --wk-paper: #fbf5e9;
+  --wk-cloud: #edf3ff;
+  --wk-sand: #f0c071;
+  --background: #16205a;
+  --foreground: #121936;
+  --planner-surface: rgba(248, 250, 255, 0.9);
+  --planner-surface-card: rgba(255, 252, 244, 0.95);
+  --planner-surface-muted: rgba(226, 235, 255, 0.78);
+  --planner-surface-soft: rgba(207, 219, 255, 0.64);
+  --planner-border: rgba(129, 154, 223, 0.56);
+  --planner-border-strong: rgba(71, 84, 177, 0.72);
+  --planner-ink-surface: #0e1433;
+  --planner-ink-surface-strong: #1a2184;
+  --planner-ink-border: rgba(255, 247, 214, 0.28);
+  --planner-ink-text: #fff7d6;
+  --planner-ink-text-muted: #d9e4ff;
+  --planner-shadow-panel: 0 24px 74px rgba(13, 19, 55, 0.18);
+  --planner-shadow-soft: 0 16px 44px rgba(13, 19, 55, 0.12);
+  --planner-shadow-card: 0 12px 34px rgba(13, 19, 55, 0.1);
+  --planner-shadow-ink: 0 24px 54px rgba(10, 15, 44, 0.28);
+  --planner-focus-ring: rgba(75, 224, 202, 0.48);
+  --planner-accent-active-surface: #e6fffb;
+  --planner-accent-active-surface-strong: rgba(205, 255, 245, 0.95);
+  --planner-accent-active-border: #4be0ca;
+  --planner-accent-active-text: #126a70;
+  --planner-accent-active-strong: #0e1433;
+  --planner-accent-warning-surface: #fff1c8;
+  --planner-accent-warning-surface-strong: rgba(255, 234, 184, 0.92);
+  --planner-accent-warning-border: #f0c071;
+  --planner-accent-warning-text: #815923;
+  --planner-accent-warning-strong: #2b1f12;
+  --planner-accent-danger-surface: #ffe7ef;
+  --planner-accent-danger-surface-strong: rgba(255, 204, 222, 0.95);
+  --planner-accent-danger-border: #ff91b5;
+  --planner-accent-danger-text: #a51445;
+  --planner-accent-danger-strong: #3a0b1c;
+  --planner-accent-positive-surface: #e5fff2;
+  --planner-accent-positive-surface-strong: rgba(201, 255, 229, 0.94);
+  --planner-accent-positive-border: #72dfb2;
+  --planner-accent-positive-text: #167656;
+  --planner-accent-positive-strong: #0d3328;
+  --planner-accent-oracle-surface: rgba(241, 239, 255, 0.92);
+  --planner-accent-oracle-surface-strong: rgba(255, 247, 214, 0.94);
+  --planner-accent-oracle-border: rgba(119, 88, 216, 0.42);
+  --planner-accent-oracle-text: #5b42bb;
+  --planner-accent-oracle-strong: #121936;
+  --planner-block-focus-surface: #fff7b8;
+  --planner-block-focus-border: #e3c856;
+  --planner-block-focus-text: #58470d;
+  --planner-block-admin-surface: #dff8ff;
+  --planner-block-admin-border: #9bddea;
+  --planner-block-admin-text: #245c7b;
+  --planner-block-selfcare-surface: #f2ddff;
+  --planner-block-selfcare-border: #c9a4f6;
+  --planner-block-selfcare-text: #65419a;
+  --planner-block-chore-surface: #dcfae8;
+  --planner-block-chore-border: #97dab8;
+  --planner-block-chore-text: #29654b;
+  --planner-block-errand-surface: #ffdde8;
+  --planner-block-errand-border: #ff9abc;
+  --planner-block-errand-text: #8c214a;
+  --planner-block-rest-surface: #edf3ff;
+  --planner-block-rest-border: #c2cffb;
+  --planner-block-rest-text: #49568f;
+  --planner-block-anchor-surface: #111a45;
+  --planner-block-anchor-border: #4be0ca;
+  --planner-block-anchor-text: #fff7d6;
+  --planner-block-other-surface: #f2ecff;
+  --planner-block-other-border: #cab8ff;
+  --planner-block-other-text: #55467f;
+  --planner-disabled-surface: rgba(226, 235, 255, 0.7);
+  --planner-disabled-border: rgba(129, 154, 223, 0.42);
+  --planner-disabled-text: #526084;
+  --font-ui:
+    "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-code:
+    "SFMono-Regular", "SF Mono", "Menlo", "Monaco", "Cascadia Mono",
+    monospace;
+  --font-editorial:
+    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Georgia", serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+  --font-display: var(--font-editorial);
+  --color-stone-50: #f3f5f6;
+  --color-stone-100: #ebeff2;
+  --color-stone-200: #d8e0e6;
+  --color-stone-300: #c1ccd5;
+  --color-stone-400: #96a5b1;
+  --color-stone-500: #6e7d8a;
+  --color-stone-600: #586875;
+  --color-stone-700: #46535e;
+  --color-stone-800: #33404a;
+  --color-stone-900: #24323c;
+  --color-stone-950: #17222b;
+  --color-amber-50: #fff8e8;
+  --color-amber-100: #f9eec8;
+  --color-amber-200: #edd79b;
+  --color-amber-300: #dcb765;
+  --color-amber-400: #bf9441;
+  --color-amber-500: #9a7229;
+  --color-amber-600: #7d5b21;
+  --color-amber-700: #64481c;
+  --color-amber-800: #4c3617;
+  --color-amber-900: #392812;
+  --color-rose-50: #fbefef;
+  --color-rose-100: #f4d9dd;
+  --color-rose-200: #e5bac3;
+  --color-rose-300: #cf96a4;
+  --color-rose-400: #b17285;
+  --color-rose-500: #93586c;
+  --color-rose-600: #794758;
+  --color-rose-700: #613746;
+  --color-rose-800: #4a2835;
+  --color-rose-900: #351a24;
+  --color-emerald-50: #eef5ef;
+  --color-emerald-100: #d8e8dc;
+  --color-emerald-200: #bad2c2;
+  --color-emerald-300: #98b7a3;
+  --color-emerald-400: #739682;
+  --color-emerald-500: #5a7d6a;
+  --color-emerald-600: #476455;
+  --color-emerald-700: #385046;
+  --color-emerald-800: #293c35;
+  --color-emerald-900: #1d2b26;
+  --color-sky-50: #edf5fb;
+  --color-sky-100: #dcebf5;
+  --color-sky-200: #bed6e6;
+  --color-sky-300: #9cbfd3;
+  --color-sky-400: #769db8;
+  --color-sky-500: #537c98;
+  --color-sky-600: #40657d;
+  --color-sky-700: #325061;
+  --color-sky-800: #263b48;
+  --color-sky-900: #1a2a34;
+  --color-violet-50: #f3eff8;
+  --color-violet-100: #e3ddef;
+  --color-violet-200: #cdc2df;
+  --color-violet-300: #ae9bc5;
+  --color-violet-400: #8e77a6;
+  --color-violet-500: #6f5f87;
+  --color-violet-600: #594b6d;
+  --color-violet-700: #483b58;
+  --color-violet-800: #372c43;
+  --color-violet-900: #271f31;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+}
+
+@media (min-width: 1280px) {
+  html {
+    font-size: 15px;
   }
 }
 
 body {
-  background: var(--background);
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 13% 8%, rgba(255, 73, 132, 0.24), transparent 25rem),
+    radial-gradient(circle at 82% 0%, rgba(75, 224, 202, 0.24), transparent 23rem),
+    radial-gradient(circle at 78% 78%, rgba(223, 255, 85, 0.16), transparent 24rem),
+    linear-gradient(135deg, #03102b 0%, #061c4c 26%, #252aa8 58%, #aebcff 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ui);
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+button {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable="true"]:focus-visible {
+  outline: 2px solid var(--planner-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+@keyframes soft-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes oracle-deck-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes oracle-deck-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes oracle-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes oracle-foreground {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes oracle-heading-settle {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-soft-fade {
+  animation: soft-fade 1s ease-out;
+}
+
+.waykeeper-welcome,
+.waykeeper-app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 73, 132, 0.28), transparent 30rem),
+    radial-gradient(ellipse at 84% 5%, rgba(75, 224, 202, 0.3), transparent 32rem),
+    radial-gradient(ellipse at 72% 78%, rgba(223, 255, 85, 0.18), transparent 28rem),
+    radial-gradient(ellipse at 10% 92%, rgba(119, 88, 216, 0.42), transparent 34rem),
+    linear-gradient(135deg, #03102b 0%, #061c4c 30%, #252aa8 64%, #dbe5ff 100%);
+}
+
+.waykeeper-welcome::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 26% 34%, rgba(255, 247, 214, 0.2), transparent 24%),
+    radial-gradient(ellipse at 58% 18%, rgba(174, 188, 255, 0.56), transparent 28%),
+    radial-gradient(ellipse at 75% 45%, rgba(75, 224, 202, 0.28), transparent 22%),
+    radial-gradient(ellipse at 40% 82%, rgba(255, 73, 132, 0.22), transparent 26%),
+    conic-gradient(from 214deg at 52% 46%, rgba(14, 20, 51, 0.64), rgba(40, 56, 228, 0.32), rgba(223, 255, 85, 0.16), rgba(119, 88, 216, 0.38), rgba(14, 20, 51, 0.64));
+  filter: blur(34px) saturate(1.22);
+  opacity: 0.7;
+}
+
+.waykeeper-welcome::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 247, 214, 0.28) 0 1px, transparent 1px),
+    radial-gradient(circle, rgba(14, 20, 51, 0.26) 0 1px, transparent 1px);
+  background-position:
+    0 0,
+    5px 6px;
+  background-size:
+    13px 13px,
+    17px 17px;
+  mask-image: linear-gradient(135deg, black 0%, transparent 84%);
+  opacity: 0.28;
+}
+
+.waykeeper-welcome > * {
+  position: relative;
+  z-index: 1;
+}
+
+.waykeeper-app-shell::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 247, 214, 0.34) 0 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  mask-image: linear-gradient(180deg, black, transparent 72%);
+  opacity: 0.2;
+}
+
+.waykeeper-app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.waykeeper-app-shell.waykeeper-theme-light {
+  background:
+    radial-gradient(ellipse at 18% 8%, rgba(75, 224, 202, 0.24), transparent 30rem),
+    radial-gradient(ellipse at 86% 2%, rgba(40, 56, 228, 0.18), transparent 28rem),
+    radial-gradient(ellipse at 76% 80%, rgba(255, 73, 132, 0.12), transparent 24rem),
+    linear-gradient(135deg, #fffdf6 0%, #edf3ff 48%, #dbe5ff 100%);
+}
+
+.waykeeper-app-shell.waykeeper-theme-light::before {
+  background-image: radial-gradient(
+    circle,
+    rgba(14, 20, 51, 0.22) 0 1px,
+    transparent 1px
+  );
+  opacity: 0.1;
+}
+
+.waykeeper-app-shell.waykeeper-theme-dark {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 73, 132, 0.28), transparent 30rem),
+    radial-gradient(ellipse at 84% 5%, rgba(75, 224, 202, 0.3), transparent 32rem),
+    radial-gradient(ellipse at 72% 78%, rgba(223, 255, 85, 0.18), transparent 28rem),
+    radial-gradient(ellipse at 10% 92%, rgba(119, 88, 216, 0.42), transparent 34rem),
+    linear-gradient(135deg, #03102b 0%, #061c4c 30%, #252aa8 64%, #dbe5ff 100%);
+}
+
+.waykeeper-panel-glow {
+  box-shadow:
+    0 24px 70px rgba(13, 19, 55, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.animate-oracle-deck-enter {
+  animation: oracle-deck-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-oracle-deck-exit {
+  animation: oracle-deck-exit 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-oracle-reveal {
+  animation: oracle-reveal 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-oracle-foreground {
+  animation: oracle-foreground 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-oracle-heading-settle {
+  animation: oracle-heading-settle 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-soft-fade,
+  .animate-oracle-deck-enter,
+  .animate-oracle-deck-exit,
+  .animate-oracle-reveal,
+  .animate-oracle-foreground,
+  .animate-oracle-heading-settle {
+    animation-delay: 0ms !important;
+    animation-duration: 1ms !important;
+    transform: none !important;
+  }
+
+  [data-testid="oracle-backdrop"] * {
+    transition-duration: 1ms !important;
+  }
+}
+
+::selection {
+  background: rgba(156, 190, 211, 0.32);
 }

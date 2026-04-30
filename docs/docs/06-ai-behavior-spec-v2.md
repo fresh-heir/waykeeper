@@ -33,6 +33,7 @@ The planner should feel intelligent, not slippery. The model is there to interpr
 The application owns:
 - canonical tasks, events, and blocks in structured state
 - timeline rendering
+- Oracle state and presentation derived from planner state
 - block status transitions
 - persistence
 - conflict detection
@@ -55,6 +56,20 @@ The model should always return structured planner data, not just prose.
 ---
 
 ## 3. Primary AI flows
+
+### Shared arrival rules
+For route-building flows, AI should improve the visible plan without becoming the only way the product becomes usable.
+
+#### Draft and replan arrival contract
+- if a validated local draft route exists, the app should show that route first
+- if a validated local replan preview exists, the app should show that preview first
+- AI may continue reviewing that visible result as a second pass
+- if AI finds a materially different validated option, Oracle should surface it as an explicit compare / apply offer
+- AI must not silently replace the visible route or remainder
+
+#### Parse behavior note
+- interpretation may still use a local baseline, fallback, or refinement path even if the current UI waits on AI in some cases
+- parse should still prefer usable structured review over prolonged blocking whenever the product can do so legibly
 
 ### Flow 1 · Parse tasks
 
@@ -85,10 +100,11 @@ The user pastes a messy to-do list and receives a usable task set without being 
 #### Output
 - structured schedule blocks
 - warnings if the day is overloaded or assumptions are rough
-- optional short summary of the planning tradeoffs
+- optional short Oracle-ready summary of the planning tradeoffs
+- optional second-pass refinement that can be offered after a validated local route is already visible
 
 #### What success looks like
-The model returns a plausible first-pass day plan that fits the visible constraints and feels believable rather than maximalist.
+The user reaches a usable day route quickly. If AI is involved, it returns a plausible first-pass day plan that fits the visible constraints and feels believable rather than maximalist, and any later improvement remains explicit rather than silently replacing the visible route.
 
 ---
 
@@ -108,10 +124,11 @@ The model returns a plausible first-pass day plan that fits the visible constrai
 - revised remaining schedule blocks
 - dropped / deferred task info when relevant
 - warnings if the rest of the day cannot hold everything
-- optional concise explanation of what changed
+- optional concise Oracle-ready explanation of what changed
+- optional second-pass remainder refinement that can be offered after a validated local preview is already visible
 
 #### What success looks like
-The user can say, in effect, “the day slipped; rebuild the rest from here,” and receive a revised timeline that preserves history and remains legible.
+The user can say, in effect, “the day slipped; rebuild the rest from here,” and receive a revised timeline that preserves history and remains legible. If AI refines the remainder later, that option stays explicit through Oracle rather than silently rewriting the preview.
 
 ---
 
@@ -124,6 +141,9 @@ Natural-language explanation may accompany the structured result, but prose alon
 
 ### The structured result should be the primary artifact
 The app must be able to render directly from the returned data.
+
+### Structured validity does not imply automatic application
+Even a fully valid AI result should not silently replace the visible route if the user is already working from a validated local route or local replan preview. Structured validity is necessary for a refinement offer, not sufficient for silent mutation.
 
 ### The model should not invent unsupported fields
 If the schema does not support a concept, the model should not smuggle it in as loose text.
@@ -250,7 +270,35 @@ The model should sound calm and exact, not apologetic or overdramatic.
 
 ---
 
-## 11. Tone and language guidance
+## 11. Oracle summary behavior
+
+Oracle content should be derived from planner state first and phrased by AI only where that improves clarity.
+
+### Oracle may help surface
+- current block and next block framing
+- concise live route insight
+- fragility warnings
+- protection cues
+- after-action change summaries
+- replan tradeoff previews
+
+### Oracle summaries must
+- reflect actual planner deltas rather than generic restatements of the route
+- explain what was preserved, moved, deferred, dropped, or protected when relevant
+- say plainly when no meaningful route change occurred
+- remain concise enough to be useful under pressure
+
+### Oracle summaries must not
+- invent hidden planner reasoning that is not grounded in app state
+- become motivational filler or vague status prose
+- act like a second planner that mutates state outside the normal planner flow
+
+### After-action behavior
+After meaningful operations such as initial draft build, replan, delay, skip, complete, or meaningful manual edits, Oracle may briefly foreground a concise change summary before returning to its default execution state unless the UI explicitly allows that summary to be pinned.
+
+---
+
+## 12. Tone and language guidance
 
 The AI’s visible summaries and warnings should sound:
 - calm
@@ -281,13 +329,13 @@ The AI’s visible summaries and warnings should sound:
 
 ### Avoid language such as
 - deep / harder / softer / loosen / tighten / fit well / hold / slip in
-- prophecy / destiny / oracle / invoke / summon
+- prophecy / destiny / invoke / summon
 
-The AI should feel like a quiet planning intelligence, not a character.
+The branded panel may be called Oracle, but the copy itself should still feel like a quiet planning intelligence, not a character.
 
 ---
 
-## 12. Safety and honesty rules
+## 13. Safety and honesty rules
 
 ### The model should be honest about overload
 If the day cannot reasonably hold all tasks, the model should say so clearly.
@@ -300,7 +348,7 @@ Do not pretend unknown things are known just to sound decisive.
 
 ---
 
-## 13. Suggested app-side function boundaries
+## 14. Suggested app-side function boundaries
 
 These are not literal required function names, but they represent the intended separations.
 
@@ -309,12 +357,13 @@ These are not literal required function names, but they represent the intended s
 - `replanRemainingDay(replanContext)`
 - `validateScheduleBlocks(blocks, hardEvents, planningWindow)`
 - `mergeReplanIntoDayPlan(existingPlan, replanResponse)`
+- `deriveOracleState(dayPlan, plannerEvent)`
 
 The model should plug into these boundaries, not replace them.
 
 ---
 
-## 14. Acceptance standard for AI behavior
+## 15. Acceptance standard for AI behavior
 
 The AI behavior is good enough for v1 if it can:
 - turn messy pasted input into workable structured tasks
@@ -323,6 +372,7 @@ The AI behavior is good enough for v1 if it can:
 - keep productive-break tasks light and appropriate
 - revise the remainder of a slipped day without erasing history
 - warn honestly when the day is overloaded
+- support Oracle-ready summaries that stay grounded in state and actual deltas
 - return structured data the app can directly use
 
 If it cannot do those things reliably, the answer is not more personality. The answer is tighter schema, tighter rules, and better validation.

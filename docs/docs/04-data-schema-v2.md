@@ -94,9 +94,16 @@ interface Task {
   breakEligible: boolean;
   splittable: boolean;
   deferrable: boolean;
+  deferCount?: number;
+  delayedCount?: number;
   energyLevel: EnergyLevel;
+  dueAt?: string; // ISO datetime, future-facing
   hardStartTime?: string; // HH:MM local if task itself must begin at a fixed time
   hardEndTime?: string;   // HH:MM local
+  carryForward?: boolean;
+  carriedFromDate?: string; // YYYY-MM-DD local
+  carryForwardReason?: "overflow" | "manual" | "unplaced" | "replan_overflow";
+  carryForwardStatus?: "pending" | "accepted" | "review" | "ignored" | "consumed";
   notes?: string;
   source: SourceTag;
 }
@@ -106,6 +113,8 @@ interface Task {
 - `breakEligible` means the task can be considered for productive-break placement.
 - `splittable` means the task may be broken into multiple schedule blocks.
 - `deferrable` means it may be dropped or pushed out of the day if the schedule cannot hold it.
+- `deferCount` / `delayedCount` are future-facing signals for protecting repeatedly deferred work.
+- `dueAt` is not required for v1, but later carry-forward logic should treat it as a warning threshold.
 
 ---
 
@@ -185,6 +194,7 @@ interface DayPlan {
 ```
 
 This is the canonical saved planner object for the day.
+A future same-day Route / List companion view should derive from this same `DayPlan` state rather than introducing a second planner model.
 
 ---
 
@@ -249,6 +259,7 @@ interface ReplanRequest {
 interface ReplanResponse {
   blocks: ScheduleBlock[];
   droppedTaskIds?: string[];
+  carryForwardTaskIds?: string[];
   warnings?: string[];
   summary?: string;
 }
@@ -259,6 +270,7 @@ interface ReplanResponse {
 - completed blocks must not be rewritten
 - fixed events must remain fixed
 - if tasks are dropped or deferred, they must be surfaced via `droppedTaskIds` and/or warnings
+- `carryForwardTaskIds` is future-facing support for explicit overflow handling and next-day intake
 
 ---
 
@@ -307,6 +319,7 @@ At minimum validate:
 
 The timeline UI must render from `DayPlan.blocks`.
 The planner must never rely on freeform AI prose as the authoritative schedule.
+A future List view should derive from the same `DayPlan`, `tasks`, `blocks`, and `hardEvents` state already used by the route.
 
 AI may provide:
 - interpretation
@@ -315,3 +328,38 @@ AI may provide:
 - revised block proposals
 
 But the app stores and renders the actual state.
+
+### Future same-day List companion note
+No major schema redesign is required for a future same-day Route / List toggle.
+List sections such as:
+- placed today
+- not yet placed
+- fixed anchors
+- completed
+- later, Carry Forward
+
+should be treated as derived UI groupings over the existing day state, not as a board model, column system, or separate multi-day persistence structure.
+
+### Future-ready date fields
+For tasks and/or planned blocks, support optional future-oriented fields such as:
+- `scheduledDate?: string`
+- `targetDate?: string`
+- `deferredToDate?: string`
+- `originDate?: string`
+- `carriedFromDate?: string`
+- `dueAt?: string`
+
+These are not required for v1 behavior, but they allow future carry-forward handling and next-day intake without replacing the existing day-first model.
+
+### Future carry-forward support note
+If Carry Forward is added later, the schema should support:
+- explicit overflow state rather than silent dropping
+- repeated deferral counts that influence future prioritization
+- due dates and due times that trigger warnings before something is scheduled or deferred beyond its due point
+
+### Future multi-day support note
+v1 centers on a single `DayPlan`, but later versions may manage a date-keyed collection of day plans:
+- `DayPlan[]`
+- or `Record<date, DayPlan>`
+
+This future support should stay minimal and should not complicate v1 logic or turn the core model into a full week planner.

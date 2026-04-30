@@ -4,7 +4,7 @@
 Waykeeper
 
 ## Product summary
-Waykeeper is a web-first, AI-assisted daily planner that converts a messy pasted task list into a realistic one-day timeline. It helps the user allocate work, place breaks intelligently, adapt when the day slips, and stay oriented around the question: **what am I doing now, and what happens next?**
+Waykeeper is a web-first, AI-assisted daily planner that converts a messy pasted task list into a realistic one-day timeline. It helps the user allocate work, place breaks intelligently, adapt when the day slips, and stay oriented around the question: **what am I doing now, and what happens next?** The timeline remains the route; Oracle is the interpretive side surface that helps the user understand what matters, what changed, and what to do next.
 
 Waykeeper is not a general productivity suite. It is a one-day planning and execution tool.
 
@@ -64,6 +64,7 @@ The app should:
 ### P1. Timeline first
 The day timeline is the primary surface of the app.
 The product should always orient around time blocks, not abstract task lists.
+Oracle may later become a first-class side surface for interpretation and action, but it must remain subordinate to the route rather than replacing it.
 
 ### P2. AI proposes, app owns state
 AI may parse, estimate, classify, draft, and revise.
@@ -108,6 +109,7 @@ The MVP is successful if a user can:
 - block detail/edit interaction
 - explicit replan from now flow
 - active block / execution state
+- Oracle side surface for current / next context, live route insight, and revision summaries
 - current-day persistence
 - optional timer linked to current block
 
@@ -133,7 +135,7 @@ The MVP is successful if a user can:
 4. User sets available time window
 5. User adds fixed events
 6. User chooses break style
-7. AI parses tasks into structured objects
+7. The system interprets tasks into structured objects
 8. User reviews / edits parsed tasks
 9. User generates draft day plan
 10. App renders timeline
@@ -141,18 +143,20 @@ The MVP is successful if a user can:
 ### Flow B — Execute current block
 1. User views timeline
 2. User identifies current block
-3. User starts the block timer or marks it in progress
-4. User completes the block, delays it, or ends it early
-5. Timeline state updates
+3. User uses Oracle or inline controls to understand the current block, what comes next, and what is fragile
+4. User starts the block timer or marks it in progress
+5. User completes the block, delays it, or ends it early
+6. Timeline state updates
 
 ### Flow C — Recover when behind
 1. User realizes schedule drift occurred
-2. User opens replan flow
+2. User opens replan flow from Oracle or timeline controls
 3. App summarizes what is complete and what remains
 4. User selects replan mode
 5. AI + scheduling logic produce revised remainder
 6. User confirms revised plan
 7. Timeline updates from the current moment forward
+8. Oracle summarizes what changed and why
 
 ---
 
@@ -176,6 +180,8 @@ The system can convert raw text into structured tasks with at least:
 - break eligibility
 - splittable or not
 - deferrable or not
+
+Early milestones may satisfy this with deterministic or placeholder local interpretation before real AI interpretation is integrated.
 
 ### FR-5 Task review
 The user can review and edit interpreted tasks before schedule generation.
@@ -204,13 +210,25 @@ The user can edit schedule blocks without immediately forcing AI replanning.
 
 ### FR-11 Active block state
 The system can show the current block, remaining time, and next block.
+This should remain answerable on the timeline itself, while Oracle can absorb most of the explanatory and action-oriented side-surface behavior around the live block.
 
 ### FR-12 Replanning
 The user can request a revised remainder of the day from a specified current time.
 Completed history and fixed events must be preserved.
+Oracle should be able to summarize actual revision deltas after replanning rather than forcing the user to infer them from the route alone.
 
 ### FR-13 Day persistence
 The current day plan persists across refresh and reopen.
+
+### FR-14 Oracle execution surface
+The system can provide an Oracle side surface that is derived from planner state and helps the user:
+- understand what matters most right now
+- see what is next
+- act on the current block
+- understand what changed after meaningful planner operations
+- inspect deeper route metrics only when actively adjusting the remainder
+
+Oracle must not become a second planner or a prose-only source of truth.
 
 ---
 
@@ -227,6 +245,7 @@ AI outputs must be structured and typed. Freeform prose must not be the only out
 
 ### NFR-4 Explainable revisions
 When the day is replanned, the user should be able to understand what changed.
+Oracle or an equivalent state-derived summary surface should make those changes legible without forcing the user to reverse-engineer them from the timeline.
 
 ### NFR-5 Low-friction editing
 Editing a task or block should feel lighter than rebuilding the day manually.
@@ -259,6 +278,7 @@ Editing a task or block should feel lighter than rebuilding the day manually.
 - breaks are mandatory planning elements, not leftover scraps
 - low-priority tasks may be deferred if the day cannot realistically hold everything
 - replanning should preserve intent where possible rather than re-randomizing the whole day
+- if some work no longer fits, the system should surface that honestly rather than silently compressing the remainder into an unrealistic day
 
 ---
 
@@ -297,3 +317,38 @@ The MVP should pass if:
 - shared task source with Time Sanctuary
 - reusable planning templates
 - energy-aware planning preferences
+- Carry Forward overflow for unfinished or unplaced work
+- next-day intake of carried-forward items from yesterday
+- same-day Route / List companion view for review and triage
+- warning-aware due-date and due-time handling for future overflow logic
+
+---
+
+### Future extension · Carry Forward overflow
+Waykeeper may later add a Carry Forward overflow flow for work that no longer fits inside the usable day.
+
+This is not part of v1.
+The purpose is not to replace the day-first timeline or turn Waykeeper into a week-view planner. The purpose is to:
+- prevent unfinished or unplaced work from being compressed unrealistically when the day runs out of room
+- place that work into a Carry Forward overflow list instead of silently losing it
+- offer carried-forward items during the next day's planning flow as "from yesterday" inputs
+- let the user choose whether to add them to today, review them first, or ignore them for now
+- support future warning behavior when carrying something past its due date or due time
+
+The day timeline remains the primary execution surface.
+Carry Forward is overflow handling for a day-first planner, not a new multi-day planning center.
+
+---
+
+### Future extension · Same-day Route / List companion view
+Waykeeper may later add a Route / List toggle for the same day.
+
+This is not part of v1.
+The purpose is not to replace the timeline-first design or turn Waykeeper into a board-first workspace. The purpose is to:
+- let the user inspect the same day's planner state as an inventory when they need clarity without time-grid pressure
+- make placed work, unplaced work, fixed anchors, and completed items easier to review
+- keep work that is not yet placed visible and easier to triage
+- later support carry-forward review inside the same day-first planner model
+
+The route remains the primary execution surface.
+List is a secondary companion lens over the same underlying day state, not a separate planning system, kanban board, or week view.

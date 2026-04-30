@@ -22,7 +22,7 @@ Waykeeper helps the user:
 1. paste a messy list of tasks, errands, obligations, and appointments
 2. define a time window and fixed events
 3. receive a draft plan with work blocks, breaks, and realistic ordering
-4. follow the plan in a linear timeline view
+4. follow the plan in a linear timeline view, with an Oracle side surface that helps interpret what matters now
 5. revise the rest of the day when they fall behind
 
 ## Product principles
@@ -32,6 +32,7 @@ Waykeeper is for today. It is not a project manager, a multi-week planner, or a 
 
 ### 2. Timeline first
 The main surface is a vertical day timeline. The app should always answer: **what am I doing now, and what comes next?**
+The timeline is the route; Oracle is the interpretive side surface that explains the route without replacing it.
 
 ### 3. AI assists; the app owns state
 The model can parse, classify, estimate, and propose schedules. The application owns the structured data, timeline state, edits, and persistence.
@@ -41,6 +42,28 @@ The app should not silently rewrite the day every few minutes. Replanning is use
 
 ### 5. Breaks are part of the schedule, not an afterthought
 Breaks should be scheduled intentionally. The user can choose restful breaks or productive breaks.
+
+### 6. Planner temperament matters
+Waykeeper should feel:
+- calm
+- exact
+- non-performative
+- humane without fake encouragement
+
+It should not drift into:
+- productivity-mascot energy
+- theatrical AI tone
+- motivational software language
+- chatty assistant behavior that competes with the route
+
+### 7. Trust must accumulate through repeated days
+Waykeeper should become more legible and dependable the more the user lives in it.
+
+That means:
+- no surprising route mutations
+- delay, skip, complete, and replan should preserve understandable causality
+- carry-forward should feel fair rather than punitive
+- AI should refine the route, not make the product feel slippery
 
 ## Core feature pillars
 
@@ -59,6 +82,7 @@ Breaks should be scheduled intentionally. The user can choose restful breaks or 
 
 ### Planning interface
 - Linear timeline view
+- Oracle side surface for current / next context, immediate actions, and revision summaries
 - Editable schedule blocks
 - Clear current/next state
 - Task-to-block traceability

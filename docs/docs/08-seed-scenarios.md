@@ -21,6 +21,7 @@ These are realistic examples for development, prompting, QA, and demo flows.
 - doctor appointment remains fixed
 - study work is protected in larger blocks
 - kitchen / insurance / emails may be placed in breaks or lighter intervals
+- Oracle should make it obvious when protecting the study block preserves the rest of the route
 
 ## Scenario 2 · Mixed life day
 ### Raw input
@@ -41,6 +42,7 @@ These are realistic examples for development, prompting, QA, and demo flows.
 - app mockup gets meaningful uninterrupted time
 - chores stay lower priority
 - breaks remain actual breaks
+- if the mockup block is protected during a revision, Oracle should explain that plainly
 
 ## Scenario 3 · Overfull day
 ### Raw input
@@ -63,6 +65,7 @@ These are realistic examples for development, prompting, QA, and demo flows.
 - system should warn that the day is overloaded
 - lower-priority tasks may be deferred
 - hard events remain fixed
+- Oracle should summarize the honest tradeoff rather than pretending the route still fits cleanly
 
 ## Scenario 4 · Replan from now
 ### Starting state
@@ -74,6 +77,7 @@ User completed A and B, then finished C at 12:30 PM instead of 11:00 AM.
 - remaining blocks D, E, F are reconsidered
 - hard events preserved
 - lower-priority items may be dropped or shortened
+- Oracle should summarize that completed history and anchors were preserved while only the unfinished remainder changed
 
 ## Scenario 5 · Productive break classification
 ### Raw input
@@ -87,3 +91,4 @@ User completed A and B, then finished C at 12:30 PM instead of 11:00 AM.
 ### Expectations
 - email / laundry / counters may qualify for productive breaks
 - deep study and careful reading should not be placed inside productive break windows
+- if a lighter task is moved instead of compressing the deep study block, Oracle should explain that consequence

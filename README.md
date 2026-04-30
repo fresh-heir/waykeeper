@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Waykeeper Web
 
-## Getting Started
+Waykeeper is a one-day, timeline-first planner built with Next.js.
 
-First, run the development server:
+## Local development
+
+Use the explicit local scripts so manual review and automation do not fight over the same port.
+
+### Manual review
+Run your own local app on `3000`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev:user
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Automation / QA
+Playwright and Codex automation reserve `3100`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run qa:server
+```
 
-## Learn More
+For production-style local checks:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm run start:user
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+or:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm run start:qa
+```
 
-## Deploy on Vercel
+## Parallel local workflow
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Port contract:
+- manual browser review: `3000`
+- Playwright / Codex automation: `3100`
+- extra parallel worktrees or experimental runs: `3110+`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Workflow rules:
+- a single working tree can only run one `next dev` server at a time in this setup
+- use the same working tree and shared `3000` server when two viewers need the exact same live files
+- use `qa:server` on `3100` when automation should run in parallel without stealing the manual review port
+- use separate git worktrees when multiple threads need to edit code in parallel
+- separate worktrees do not live-sync with each other; they only match after changes are merged, rebased, or cherry-picked
+- automated QA should not borrow whatever manual server happens to be open
+
+## Playwright
+
+`npm run test:e2e` now targets the automation lane by default and uses:
+- `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100` by default
+- an auto-started local QA server on `3100` built from the current tree unless one is already running on that automation port
+
+If you need Playwright to hit your already-running live dev server on `3000`, use shared mode:
+
+```bash
+npm run test:e2e:shared
+```
+
+You can override the target explicitly if needed:
+
+```bash
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:3110 npm run test:e2e
+```
+
+## Troubleshooting
+
+If Playwright or the Codex browser tool fails with `Opening in existing browser session`, clear the Playwright Chrome profile cache:
+
+```bash
+rm -rf ~/Library/Caches/ms-playwright/mcp-chrome
+```
+
+If exact live parity matters, share one working tree and point both viewers or tests at the same running dev server. Two independently mutating worktrees cannot both stay live-up-to-date at the same time.

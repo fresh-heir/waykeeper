@@ -200,6 +200,7 @@ When the day is overloaded:
 - defer lower-priority deferrable tasks before compressing essential work excessively
 - surface what was deferred or dropped
 - warn the user clearly instead of pretending all items still fit
+- once the remaining usable time is exhausted, prefer honest overflow handling over squeezing every remaining task into unrealistic fragments
 
 ### Important
 Waykeeper should not “solve” overload by silently shortening every task unrealistically.
@@ -304,3 +305,50 @@ The app should still enforce:
 
 The rule of thumb is:
 AI proposes the route; the application keeps the map coherent.
+
+---
+
+## 16. Route facts and planner events available to Oracle
+
+Oracle should derive its explanations from existing planner state and planner events rather than from a separate scheduling subsystem.
+
+Examples of route facts or events Oracle may derive from existing state:
+- current block and next block
+- slack before the next hard event
+- whether a focus block was protected intact
+- whether anchors were preserved during revision
+- what blocks moved, dropped, deferred, or carried forward after an action
+- whether a meaningful route change occurred at all
+
+These are presentation-layer derivations over the existing day state.
+They should not require the scheduler to invent a second hidden insight engine.
+
+---
+
+## Future carry-forward rules (not for v1)
+
+Waykeeper may later support Carry Forward overflow handling without becoming a multi-day planner.
+
+### Core future rule
+When today runs out of usable room, unfinished or unplaced work may be carried forward rather than being compressed unrealistically into the current day.
+
+### Future carry-forward rules
+- preserve today’s completed history
+- surface what was carried forward, not just that it disappeared
+- use carry forward as overflow handling, not as a hidden multi-day scheduling system
+- prefer carrying forward tasks that are:
+  - less urgent
+  - lower priority
+  - more deferrable
+  - delayed fewer times so far
+- protect more strongly:
+  - urgent tasks
+  - must-do tasks
+  - repeatedly deferred tasks
+  - tasks with earlier due dates or due times
+- if a task would be scheduled or deferred past a known due datetime, show an explicit warning instead of doing that silently
+- do not turn this into a cluttered week grid or future calendar center
+
+### Next-day intake rule
+The day timeline remains the execution surface.
+Carried-forward items should later be available as optional input to the next day's planning flow, with clear accept, review, or ignore choices.

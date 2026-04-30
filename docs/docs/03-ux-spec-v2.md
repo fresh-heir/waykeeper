@@ -10,13 +10,20 @@ The user should move through a clear loop:
 4. execute the current block
 5. revise the remainder when needed
 
+Implementation can reach this loop with local placeholder interpretation and local route generation before real AI integration is added.
+
 ---
 
 ## Global UX rules
 - The timeline is the main screen.
+- The timeline is the route; Oracle is the side surface for meaning, action, and revision clarity.
+- Route remains the primary view even if a future same-day List companion view is added later.
 - There should be one obvious primary action per screen.
 - The app should always surface the current block and next block.
+- Oracle should absorb most of the separate current-block / next / replan utility that would otherwise sit in a detached right rail.
 - AI suggestions must remain editable.
+- if a validated local route or remainder exists, it should become usable before AI finishes reviewing alternatives
+- late AI improvements must be surfaced explicitly through Oracle as compare/apply options rather than silently replacing the visible route
 - Replanning should feel like revising a route, not rebuilding the app state from scratch.
 - The interface should feel finite, not like an infinite productivity inbox.
 
@@ -99,6 +106,8 @@ Moves to task interpretation once submitted.
 ### Purpose
 Convert raw input into editable structured tasks before schedule generation.
 
+Early milestones may satisfy this screen with deterministic placeholder interpretation before real AI-backed interpretation is wired in.
+
 ### Primary user questions
 - Did the app understand my day correctly?
 - How long do these things probably take?
@@ -118,7 +127,7 @@ Convert raw input into editable structured tasks before schedule generation.
 - ability to delete or add tasks
 - warnings / follow-up questions if needed
 - CTA: **Build day plan**
-- secondary CTA: **Back to day setup**
+- header or overflow action: **Edit day setup**
 
 ### UX rules
 - the user should be able to fix obvious AI mistakes quickly
@@ -138,6 +147,8 @@ Example:
 ### Purpose
 Primary working surface of the app.
 
+Early milestones may reach this screen with locally generated route blocks before real AI scheduling is added.
+
 ### Primary user questions
 - What is the shape of my day?
 - What am I doing now?
@@ -146,37 +157,109 @@ Primary working surface of the app.
 
 ### Required elements
 - day title / date
+- structural day controls in header or overflow, including **Edit day setup**
 - current time indicator line
 - vertical time axis
 - rendered schedule blocks with clear block types
+- future Route / List toggle for the same day, with Route as the default
 - visible distinction for:
   - focus blocks
   - productive or restful breaks
   - fixed events / appointments
   - admin / chore / self-care blocks
   - done / active / upcoming / skipped
-- current block summary pinned near top or now-line area
-- next block preview
-- primary CTA near now: **Replan from now**
+- Oracle side panel as the primary interpretive side surface for:
+  - current block
+  - next block
+  - immediate actions
+  - concise live route insight
 
 ### Secondary actions on timeline
 - start timer
-- mark complete
-- delay
-- skip
 - edit block
+
+### Oracle behavior rules
+- the timeline still has to answer “what now?” even if Oracle is ignored
+- Oracle is where most current-block, next-block, and replan utility should live as the product matures
+- Oracle should feel stateful, not like a generic assistant text box
+- Oracle may use a subtle atmospheric backdrop layer or light day-part tinting, but scenic window-world treatment belongs to a later phase
+- day-setup editing is structural navigation and should not sit at the bottom of a live execution rail
 
 ### Timeline behavior rules
 - the screen should answer “what now?” immediately
 - fixed events should read as immovable anchors
 - breaks should not be visually invisible or collapsed into empty space
 - if the day is overloaded, the timeline should show that honestly rather than hiding overflow
+- if a future List companion view exists, both views must reflect the same underlying planner state rather than diverging into separate planning modes
 
 ### Empty / fallback states
 If schedule generation fails, show:
 - why
 - what needs to be corrected
 - return path to interpretation screen
+
+---
+
+## Oracle panel states
+
+### Oracle · Default / Now mode
+This is the normal execution state.
+
+#### Required elements
+- current block
+- next block
+- immediate actions:
+  - mark complete
+  - skip
+  - delay options
+  - replan / tune remainder
+- one or two short live insights derived from planner state
+
+#### Good insight types
+- protect this block
+- delay risk
+- slack before next anchor
+- likely first casualty if the route slips
+- whether finishing on time preserves recovery later
+
+#### UX rules
+- keep the copy concise and calm
+- this should read like a useful planner surface, not a chatbot response
+- insight should be grounded in route state, not generic commentary
+
+### Oracle · After-action / What changed mode
+After meaningful operations, Oracle may foreground a concise change summary before returning to default mode.
+
+#### Triggering operations
+- initial draft build
+- replan from now
+- delay current block
+- skip block
+- mark complete
+- meaningful manual route edits
+- late AI second-pass improvements becoming ready
+
+#### Required behavior
+- the summary should explain actual planner deltas such as what was preserved, moved, deferred, dropped, or protected
+- if no meaningful route change occurred, Oracle should say so plainly rather than manufacturing insight
+- this is a transient foregrounded state unless the product explicitly lets the user pin or hold it
+- if AI finishes after the visible local route is already on screen, Oracle should frame it as a second-pass option, not as the route having quietly changed underneath the user
+
+### Oracle · Adjust / Replan mode
+When the user actively revises the day, Oracle expands into a richer analytical state.
+
+#### Required elements
+- current boundary
+- locked anchors ahead
+- flexible blocks or tasks ahead
+- overload, slack, or fragmentation signals
+- replan mode options
+- **Generate revised plan** CTA
+
+#### UX rules
+- deeper metrics belong here, not as ambient clutter in the default execution state
+- this is still route revision, not a separate planning system
+- if a local replan preview is already visible, any later AI option should appear as an explicit alternative preview rather than replacing the visible one automatically
 
 ---
 
@@ -212,7 +295,7 @@ Inspect and modify a single schedule block.
 
 ---
 
-## Screen 6 · Replan from now sheet
+## Screen 6 · Replan from now sheet / Oracle adjust state
 
 ### Purpose
 Revise only the unfinished remainder of the day.
@@ -241,12 +324,63 @@ Revise only the unfinished remainder of the day.
 - completed history must remain visually separate from the revised future
 - the user must understand that the revision applies from the current time onward
 - the sheet should clearly surface dropped or deferred tasks after the replan
+- if some work no longer fits, the result should split clearly into:
+  - still scheduled today
+  - carried forward
+- if a task would be scheduled or carried forward past its due date or due time in a future version, the UI should warn explicitly rather than allowing that silently
+- when this state is surfaced through Oracle, it should expand the side panel rather than create a second competing control stack
 
 ### After success
 Return to timeline with:
 - updated remaining blocks
 - preserved past blocks
 - visible “revised” marker if helpful
+- visible carry-forward summary if any remaining tasks were moved out of today
+- Oracle briefly foregrounding a concise summary of what actually changed before returning to default mode
+
+### Future carry-forward actions
+When Carry Forward exists, the replan result should make overflow legible and actionable:
+- still-scheduled-today items remain on the timeline
+- carried-forward items appear in a separate overflow list
+- each carried-forward item should explain why it moved, such as lack of remaining room or lower urgency
+- the user should be able to review what moved instead of discovering it later by accident
+
+---
+
+## Future companion view · Same-day Route / List toggle (not in v1)
+
+### Purpose
+Give the user a secondary same-day inventory lens without replacing the timeline-first route.
+
+### Primary user questions
+- What is placed in today already?
+- What still has not been placed?
+- Which fixed anchors are shaping the day?
+- What is done already?
+
+### Required elements
+- clear Route / List toggle within the main day-planning experience
+- Route remains the default and primary view
+- List renders from the same underlying planner state as Route
+- list sections for:
+  - Placed today
+  - Not yet placed
+  - Fixed anchors
+  - Completed
+  - later, Carry Forward when that feature exists
+
+### UX rules
+- this is a same-day companion lens, not a separate planning system
+- this is not a kanban board, workspace, or week view
+- List should reduce time-grid pressure when the user needs to inspect the day as an inventory
+- unplaced work should remain especially legible in List view
+- switching between Route and List must not make items disappear or appear to belong to different planner states
+
+### Relationship to the route
+- Route remains the main execution surface
+- List is a secondary review / triage view for the same day
+- edits or state changes should reflect consistently in both views because they share one source of truth
+- later Carry Forward triage may surface naturally in List view, but only as part of the same day-first planner model
 
 ---
 
@@ -277,6 +411,7 @@ Support execution during the current block without leaving the planner context.
 - this screen should be simpler than the timeline screen
 - it should support execution, not planning
 - if the user needs more time, the follow-up should be obvious and low-friction
+- if this view exists, it should not replace Oracle as the main interpretive surface for revision clarity
 
 ---
 
@@ -298,6 +433,46 @@ Control baseline planner behavior without cluttering the core loop.
 
 ---
 
+## Future flow · Carry Forward overflow intake (not in v1)
+
+### Purpose
+Provide a constrained overflow handoff from one day into the next without replacing the day-first execution model.
+
+### Primary user questions
+- What rolled over from yesterday?
+- Which of these items should come into today's plan?
+- What should I review before accepting?
+- What can I ignore for now?
+
+### Required elements
+- carried-forward items section surfaced during next-day intake
+- clear "from yesterday" labeling
+- each item showing enough context to understand why it carried forward
+- optional due-date or due-time warning state
+- actions:
+  - **Add to today**
+  - **Review first**
+  - **Ignore for now**
+- CTA examples:
+  - **Add selected to today**
+  - **Review carried-forward items**
+  - **Skip for now**
+
+### UX rules
+- this is not a week view or future calendar grid
+- it should remain personal, quiet, and planner-like
+- it should not replace the one-day timeline as the main execution surface
+- it should stay lighter than a multi-day planning board
+- the user should be able to see overflow and next-day intake choices without drowning in details
+- if a carried-forward item would now sit past its due point, the warning should be visible before acceptance
+
+### Relationship to the main timeline
+- the main daily timeline remains the primary working surface
+- Carry Forward is only an optional input into the next day's planning flow
+- accepting a carried-forward item should feed the normal day-planning process rather than create a separate future-planning surface
+
+---
+
 ## Core navigation model
 For v1, navigation should be minimal:
 - Welcome / Resume
@@ -308,6 +483,9 @@ For v1, navigation should be minimal:
 - Replan sheet
 - Active block view
 - Settings
+
+Oracle is part of the timeline screen rather than a separate navigation destination.
+Day setup editing controls belong in header-level or overflow day controls, not in a bottom-of-rail execution stack.
 
 Avoid tabs unless truly necessary. The product loop is sequential and modal enough that simple routes + sheets are cleaner.
 
@@ -328,6 +506,7 @@ The user should never need to manually rebuild the entire second half of the day
 The UX is working if:
 - the timeline is the obvious center of gravity
 - the current and next blocks are always visible
+- Oracle makes execution and revision intent clearer without becoming a second planner
 - editing feels lighter than starting over
 - replanning feels contained
 - the user never has to guess where to go next in the flow

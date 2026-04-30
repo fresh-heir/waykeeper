@@ -6,15 +6,22 @@ This repository handoff pack is meant to give Codex a concrete product, UX, and 
 
 ## Documents
 
+- Active redesign workspace:
+  [13-submission-redesign-workspace.md](docs/13-submission-redesign-workspace.md)
+
 - [01-product-overview.md](docs/01-product-overview.md)
-- [02-prd.md](docs/02-prd.md)
-- [03-ux-spec.md](docs/03-ux-spec.md)
-- [04-data-schema.md](docs/04-data-schema.md)
-- [05-scheduling-rules.md](docs/05-scheduling-rules.md)
-- [06-ai-behavior-spec.md](docs/06-ai-behavior-spec.md)
+- [02-prd-v2.md](docs/02-prd-v2.md)
+- [03-ux-spec-v2.md](docs/03-ux-spec-v2.md)
+- [04-data-schema-v2.md](docs/04-data-schema-v2.md)
+- [05-scheduling-rules-v2.md](docs/05-scheduling-rules-v2.md)
+- [06-ai-behavior-spec-v2.md](docs/06-ai-behavior-spec-v2.md)
 - [07-design-system.md](docs/07-design-system.md)
 - [08-seed-scenarios.md](docs/08-seed-scenarios.md)
 - [09-acceptance-tests.md](docs/09-acceptance-tests.md)
+- [10-codex-build-sequence.md](docs/10-codex-build-sequence.md)
+- [11-planner-coverage-audit.md](docs/11-planner-coverage-audit.md)
+- [12-roadmap-reset.md](docs/12-roadmap-reset.md)
+- [13-submission-redesign-workspace.md](docs/13-submission-redesign-workspace.md)
 
 ## Product summary
 
@@ -37,13 +44,14 @@ Waykeeper is not a full project-management platform in v1. It is a one-day plann
 ## Suggested implementation milestones
 
 1. App shell + routing + timeline scaffold
-2. Intake flow + pasted task parsing UI
-3. Structured task model + local planner state
-4. Schedule generation logic
-5. Timeline rendering and manual editing
+2. Layout correction + shell refinement
+3. Day setup / intake flow
+4. Interpretation placeholder + local route generation
+5. Current / next awareness + execution interactions
 6. Replan-from-now flow
-7. AI integration
-8. Design polish and refinement
+7. Carry Forward overflow
+8. Real AI integration
+9. Design polish and QA
 
 ## Working name
 
