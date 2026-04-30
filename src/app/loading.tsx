@@ -13,13 +13,13 @@ export default function Loading() {
                 Waykeeper
               </p>
               <p className="mt-2 text-sm text-[color:var(--wk-ink-muted)]">
-                Your journey. Your pace. We&apos;ll keep the way.
+                Building the route.
               </p>
             </div>
           </div>
           <div className="mt-10">
             <p className="text-sm text-[color:var(--wk-ink-muted)]">
-              Loading your path...
+              Loading your plan...
             </p>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-[rgba(14,20,51,0.12)]">
               <div className="h-full w-[73%] rounded-full bg-[linear-gradient(90deg,var(--wk-verdigris),var(--wk-cobalt))]" />

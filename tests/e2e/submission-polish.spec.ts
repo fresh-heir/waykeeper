@@ -30,7 +30,7 @@ test("welcome How it works opens a polished explanation modal", async ({ page })
 
   await page.getByRole("button", { name: "How it works" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "From chaos to route." });
+  const dialog = page.getByRole("dialog", { name: "From task dump to route." });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText("Tell us your day");
   await expect(dialog).toContainText("Review the interpretation");
@@ -104,7 +104,7 @@ test("profile choices persist and appear in the profile summary", async ({
   const profileSummary = page.getByTestId("waykeeper-profile-summary");
 
   await expect(profileSummary).toContainText("Avery's Waykeeper Profile");
-  await expect(profileSummary).toContainText("Deepener");
+  await expect(profileSummary).toContainText("Protecting focus");
   await expect(profileSummary).toContainText("Evening closer");
   await expect(profileSummary).toContainText(/Relationships/);
 

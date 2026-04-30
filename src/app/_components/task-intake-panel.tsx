@@ -150,7 +150,7 @@ const breakCadenceOptions: Array<{
   {
     value: "focus_45",
     label: "45m focus / 10m break",
-    description: "A steadier cadence with more breathing room.",
+    description: "A steady cadence with a short reset.",
   },
   {
     value: "focus_50",
@@ -185,20 +185,20 @@ const profileJourneyOptions = [
   {
     value: "starting",
     label: "Starting out",
-    summaryTitle: "Wayfinder",
-    helper: "Give me a clear first route and fewer assumptions.",
+    summaryTitle: "New routine",
+    helper: "Keep the route simple and explicit.",
   },
   {
     value: "building",
     label: "Building",
-    summaryTitle: "Builder",
-    helper: "Help me create momentum and make today feel usable.",
+    summaryTitle: "Building routine",
+    helper: "Help me get through the day without losing track.",
   },
   {
     value: "deepening",
     label: "Deepening",
-    summaryTitle: "Deepener",
-    helper: "Protect quality, craft, and the work that matters most.",
+    summaryTitle: "Protecting focus",
+    helper: "Keep important work from getting crowded out.",
   },
 ] as const;
 
@@ -231,7 +231,7 @@ const profilePriorityOptions = [
   {
     value: "purpose",
     label: "Purpose",
-    helper: "Keep the day connected to why it matters.",
+    helper: "Keep the important reason visible.",
   },
 ] as const;
 
@@ -239,22 +239,22 @@ const profileRhythmOptions = [
   {
     value: "steady_builder",
     label: "Steady builder",
-    helper: "Use a calm route with visible buffers and a clean close.",
+    helper: "Use a steady route with visible buffers.",
   },
   {
     value: "morning_focus",
     label: "Morning focus",
-    helper: "Make the first deep-work block feel protected.",
+    helper: "Protect the first deep-work block.",
   },
   {
     value: "meeting_weave",
     label: "Meeting weave",
-    helper: "Help me recover between anchors and follow-ups.",
+    helper: "Leave room between meetings and follow-ups.",
   },
   {
     value: "evening_closer",
     label: "Evening closer",
-    helper: "Leave space to wrap the day without a cliff edge.",
+    helper: "Leave time to wrap up before the day ends.",
   },
 ] as const;
 
@@ -912,14 +912,14 @@ function DaySetupConcept({
         <div className="space-y-6 p-6 md:p-8">
           <div>
             <p className="text-[0.72rem] font-black uppercase tracking-[0.28em] text-[color:var(--wk-amethyst)]">
-              Let&apos;s get to know you
+              Start with the real day
             </p>
             <h1 className="mt-3 font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[0.9] tracking-[-0.07em] text-[color:var(--wk-ink)]">
-              Let&apos;s get to know your day.
+              What needs to fit today?
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--wk-ink-muted)]">
-              Waykeeper shapes a plan around the person and the constraints.
-              This profile stays local and lightweight for the submission pass.
+              Add tasks, fixed events, and the hours you actually have. The
+              profile stays on this device and only shapes the summary copy.
             </p>
           </div>
 
@@ -948,7 +948,7 @@ function DaySetupConcept({
 
             <div className="space-y-2">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--wk-ink-muted)]">
-                Where are you on your journey?
+                What kind of day is this?
               </p>
               <div className="grid gap-2 sm:grid-cols-3">
                 {profileJourneyOptions.map((option) => (
@@ -977,11 +977,11 @@ function DaySetupConcept({
 
           <section>
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--wk-ink-muted)]">
-              What matters most right now? Choose up to 3.
+              What should this route protect? Choose up to 3.
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-              These show up in the review and share brief so the plan has a
-              human reason, not just a list of blocks.
+              These appear in the review and daily brief. They do not change
+              the scheduler.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {profilePriorityOptions.map((option) => {
@@ -1011,12 +1011,11 @@ function DaySetupConcept({
 
           <section>
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--wk-ink-muted)]">
-              Which rhythm should Waykeeper respect?
+              What rhythm fits today?
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-              Local-only context for the profile summary and route brief. The
-              deterministic scheduler still uses the concrete window, breaks,
-              anchors, and tasks below.
+              This helps describe the route. Scheduling still comes from the
+              times, breaks, fixed events, and tasks below.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {profileRhythmOptions.map((option) => (
@@ -1211,8 +1210,8 @@ function DaySetupConcept({
                     What should the route feel like?
                   </span>
                   <span className="block text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-                    This becomes visible guidance in the profile and share
-                    brief; it does not override the scheduler.
+                    This appears in the profile and daily brief. It does not
+                    override the scheduler.
                   </span>
                   <textarea
                     className="min-h-20 w-full resize-y rounded-[6px] border border-[rgba(14,20,51,0.16)] bg-white px-3 py-2 text-sm outline-none focus:border-[color:var(--wk-cobalt)]"

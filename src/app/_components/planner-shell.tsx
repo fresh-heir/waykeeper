@@ -142,7 +142,7 @@ const replanModeOptions: Array<{
     mode: "replan_from_now",
     label: "Replan from now",
     description:
-      "Rebuild the unfinished remainder using the current route priorities and constraints.",
+      "Rebuild only the unfinished blocks from the current time.",
   },
   {
     mode: "keep_essentials_only",
@@ -154,7 +154,7 @@ const replanModeOptions: Array<{
     mode: "gentler_remainder",
     label: "Gentler remainder",
     description:
-      "Preserve more breathing room and avoid a dense end-of-day squeeze.",
+      "Add more space and avoid a packed end of day.",
   },
   {
     mode: "use_productive_breaks",
@@ -166,7 +166,7 @@ const replanModeOptions: Array<{
     mode: "preserve_focus_first",
     label: "Preserve focus first",
     description:
-      "Protect high-value deep work first and push lighter work later or out of the day.",
+      "Keep the highest-value work first; move lighter work later if needed.",
   },
 ];
 
@@ -327,7 +327,7 @@ export function PlannerShell({
                       Route
                     </p>
                     <p className={`mt-1 text-sm leading-6 ${routeIntroTextClass}`}>
-                      The route stays primary; Oracle reads what changed and what matters now.
+                      Follow the route. Use Oracle when the rest of the day needs adjusting.
                     </p>
                   </div>
                 </div>
@@ -502,13 +502,13 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
             W
           </span>
           <div>
-            <p className="text-sm font-semibold">Wayfarer</p>
+            <p className="text-sm font-semibold">Today&apos;s route</p>
             <p
               className={`text-xs ${
                 isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/48"
               }`}
             >
-              Level 12
+              Local plan
             </p>
           </div>
         </div>
@@ -1223,7 +1223,7 @@ function RouteExportPanel({
               Share route
             </p>
             <p className="mt-1 text-[12px] leading-5 text-stone-700">
-              Copy a daily brief, handoff prompt, or raw schedule.
+              Copy a readable brief, AI handoff, or raw schedule.
             </p>
           </div>
           <span data-testid="route-export-source-badge">
@@ -2315,7 +2315,7 @@ function NowModeSummary({
         style={getRevealDelayStyle(125)}
       >
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--planner-accent-oracle-text)]">
-          Live insight
+          Route notes
         </p>
         <div className="mt-2 space-y-2">
           {insightLines.map((item, index) => (

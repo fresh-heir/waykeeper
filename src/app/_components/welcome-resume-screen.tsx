@@ -78,7 +78,7 @@ export function WelcomeResumeScreen({
             </div>
             <div className="mt-5 h-1 w-16 bg-[color:var(--wk-cobalt)]" />
             <p className="mt-5 max-w-[18rem] text-[1.18rem] leading-7 text-[color:var(--wk-ink)]">
-              Clarity for the road. Meaning for the miles.
+              Paste the day&apos;s mess in. Get a plan you can follow.
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export function WelcomeResumeScreen({
             >
               <span className="block text-[0.98rem]">Start today&apos;s plan</span>
               <span className="mt-0.5 block text-[0.72rem] font-normal opacity-80">
-                Begin with focus and intention.
+                Build a route from your real tasks.
               </span>
             </WaykeeperButton>
 
@@ -119,7 +119,7 @@ export function WelcomeResumeScreen({
             >
               <span className="block text-[0.98rem]">Try sample day</span>
               <span className="mt-0.5 block text-[0.72rem] font-normal opacity-80">
-                See Waykeeper in action.
+                Use a realistic workday example.
               </span>
             </WaykeeperButton>
           </div>
@@ -156,10 +156,10 @@ export function WelcomeResumeScreen({
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,252,244,0.95)_0%,rgba(255,252,244,0.64)_8%,rgba(8,13,42,0.02)_38%,rgba(8,13,42,0.18)_100%)]" />
           <div className="absolute bottom-6 left-6 right-6 max-w-[31rem] rounded-[8px] border border-white/22 bg-[rgba(255,252,244,0.86)] p-5 text-[color:var(--wk-ink)] shadow-[0_22px_60px_rgba(3,8,34,0.2)] backdrop-blur md:left-auto">
             <p className="text-[0.68rem] font-black uppercase tracking-[0.26em] text-[color:var(--wk-coral)]">
-              Waykeeper promise
+              What you get
             </p>
             <p className="mt-2 font-display text-[clamp(1.55rem,2.6vw,2.3rem)] leading-none tracking-[-0.05em]">
-              Your day, shaped into a route you can trust.
+              A readable route for today, with breaks and overflow handled.
             </p>
             {nextBlockTitle || progressLabel ? (
               <p className="mt-3 text-sm leading-6 text-[color:var(--wk-ink-muted)]">
@@ -218,7 +218,7 @@ function HowItWorksModal({
               className="mt-2 font-display text-[2.6rem] leading-none tracking-[-0.07em]"
               id="waykeeper-how-it-works-title"
             >
-              From chaos to route.
+              From task dump to route.
             </h2>
           </div>
           <button
@@ -236,16 +236,16 @@ function HowItWorksModal({
             icon={<BotanicalGlyph className="h-10 w-7" tone="jade" />}
             title="Tell us your day"
           >
-            Paste the mess, set the planning window, and mark fixed anchors.
+            Paste your tasks, set your available time, and add fixed events.
           </HowItWorksStep>
           <HowItWorksStep icon={<Starcut className="size-8" />} title="Review the interpretation">
-            Waykeeper makes the assumptions visible before anything becomes a route.
+            Check the tasks, durations, deadlines, and fixed times before building.
           </HowItWorksStep>
           <HowItWorksStep
             icon={<OracleSparkle className="size-9" title="" />}
             title="Follow your route with Oracle"
           >
-            The route stays primary; Oracle helps adjust the remainder when reality moves.
+            Use the route first. If the day changes, tune only the remaining blocks.
           </HowItWorksStep>
         </div>
 

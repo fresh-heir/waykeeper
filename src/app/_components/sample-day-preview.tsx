@@ -44,12 +44,12 @@ const samplePersonas: Record<
       "Complete calculus problem set",
       "Email academic advisor",
     ],
-    insight: "Protect deep study without losing meals, movement, or admin follow-through.",
+    insight: "See study blocks, class time, meals, errands, and admin in one plan.",
     label: "Student",
     promises: [
-      { tone: "blue", title: "Focused study", value: "Deep work before lighter tasks." },
-      { tone: "green", title: "Real breaks", value: "Meals and reset blocks stay visible." },
-      { tone: "violet", title: "Honest overflow", value: "Lower-priority work can move." },
+      { tone: "blue", title: "Study first", value: "Put the hardest work before class and admin." },
+      { tone: "green", title: "Breaks included", value: "Meals and reset time stay on the route." },
+      { tone: "violet", title: "Overflow shown", value: "Lower-priority work can move instead of disappearing." },
     ],
     title: "A student day with real deadlines",
     waypoints: [
@@ -70,12 +70,12 @@ const samplePersonas: Record<
       "Review launch metrics dashboard",
       "Submit April expense report",
     ],
-    insight: "Your best work comes when meetings stop eating the shape of the day.",
+    insight: "See focus work, meetings, errands, and follow-ups in one route.",
     label: "Working Professional",
     promises: [
-      { tone: "blue", title: "Deep work first", value: "Focus before meetings multiply." },
-      { tone: "green", title: "Clean handoffs", value: "Follow-ups land in the right window." },
-      { tone: "violet", title: "Adaptive Oracle", value: "Remainder tuning when work shifts." },
+      { tone: "blue", title: "Focus first", value: "Do the client update before meetings take over." },
+      { tone: "green", title: "Follow-ups placed", value: "Email and admin get realistic slots." },
+      { tone: "violet", title: "Adjust later", value: "Tune the unfinished route if work shifts." },
     ],
     title: "A workday with focus and follow-through",
     waypoints: [
@@ -96,12 +96,12 @@ const samplePersonas: Record<
       "Polish pricing page hero copy",
       "Record product demo clips",
     ],
-    insight: "Creative momentum works best when the day has a visible spine.",
+    insight: "See maker work, calls, admin, and shipping tasks in one plan.",
     label: "Creative / Founder",
     promises: [
-      { tone: "blue", title: "Maker time", value: "Protect the block that actually ships." },
-      { tone: "green", title: "Operations lane", value: "Admin gets contained, not ignored." },
-      { tone: "violet", title: "Evening clarity", value: "Reflection closes the loop." },
+      { tone: "blue", title: "Maker time", value: "Protect the launch email and demo clips." },
+      { tone: "green", title: "Admin lane", value: "Keep operations contained and visible." },
+      { tone: "violet", title: "Clean close", value: "End with tomorrow's top three." },
     ],
     title: "A maker day for shipping the thing",
     waypoints: [
@@ -140,7 +140,7 @@ export function SampleDayPreview({
               {selectedPersona.title}
             </h1>
             <p className="mt-5 max-w-sm text-sm leading-6 text-white/76">
-              Choose a familiar day shape, then see Waykeeper build a real route from the same planner engine.
+              Pick a sample, review the inputs, then build the route.
             </p>
           </div>
           <div className="mt-8 grid gap-2">
@@ -258,19 +258,19 @@ export function SampleDayPreview({
                 </ul>
               </div>
               <ExperienceItem icon={<OracleSparkle className="size-8" title="" />}>
-                Focused time for deep work.
+                Focus blocks with real task names.
               </ExperienceItem>
               <ExperienceItem icon={<BotanicalGlyph className="h-9 w-7" tone="jade" />}>
-                Space to learn and grow.
+                Breaks, meals, and errands kept visible.
               </ExperienceItem>
               <ExperienceItem icon={<Starcut className="size-8" />}>
-                Creative energy unlocked.
+                Overflow shown instead of hidden.
               </ExperienceItem>
               <ExperienceItem icon={<BotanicalGlyph className="h-9 w-7" tone="violet" />}>
-                Connections that matter.
+                Fixed meetings and calls respected.
               </ExperienceItem>
               <ExperienceItem icon={<BotanicalGlyph className="h-9 w-7" tone="blue" />}>
-                Evening reflection for calm and clarity.
+                A shareable daily brief.
               </ExperienceItem>
             </div>
           </div>

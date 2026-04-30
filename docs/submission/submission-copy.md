@@ -18,7 +18,7 @@ AI usage:
 AI helps interpret messy task input, draft or refine a believable schedule, and explain route changes. The app keeps a validated local route usable first, and AI refinements are explicit rather than silently replacing the visible plan.
 
 Demo instructions:
-Try the Working Professional sample day, then open the route. Look at the active countdown, Oracle guidance, and Share route daily brief. Then try Start today's plan to see the real intake flow.
+Try the Working Professional sample day, then open the route. Look at the active countdown, Oracle notes, and Share route daily brief. Then try Start today's plan to see the real intake flow.
 
 ## Screenshot set
 
