@@ -24,8 +24,11 @@ interface WelcomeResumeScreenProps {
   onSampleDay: () => void;
   onStartToday: () => void;
   onImportPlan: () => void;
+  onTimeZoneChange: (timeZone: string) => void;
   progressLabel?: string;
   resumeBlockTitle?: string;
+  selectedTimeZone: string;
+  timeZoneOptions: Array<{ label: string; value: string }>;
 }
 
 export function WelcomeResumeScreen({
@@ -40,10 +43,14 @@ export function WelcomeResumeScreen({
   onResumePlan,
   onSampleDay,
   onStartToday,
+  onTimeZoneChange,
   progressLabel,
   resumeBlockTitle,
+  selectedTimeZone,
+  timeZoneOptions,
 }: WelcomeResumeScreenProps) {
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (!isHowItWorksOpen) {
@@ -184,13 +191,39 @@ export function WelcomeResumeScreen({
             </button>
             <span aria-hidden="true" className="h-4 w-px bg-[rgba(14,20,51,0.2)]" />
             <button
-              aria-disabled="true"
-              className="rounded-full border border-[rgba(14,20,51,0.1)] bg-white/30 px-4 py-2 normal-case tracking-normal text-[color:var(--wk-ink-muted)] opacity-70"
+              aria-expanded={isSettingsOpen}
+              className="rounded-full border border-[rgba(14,20,51,0.14)] bg-white/55 px-4 py-2 normal-case tracking-normal transition hover:border-[color:var(--wk-cobalt)] hover:text-[color:var(--wk-cobalt)]"
+              onClick={() => setIsSettingsOpen((isOpen) => !isOpen)}
               type="button"
             >
-              Settings later
+              Settings
             </button>
           </div>
+          {isSettingsOpen ? (
+            <section className="mt-3 max-w-[26rem] rounded-[14px] border border-[rgba(14,20,51,0.12)] bg-white/65 p-4 shadow-[0_14px_34px_rgba(2,8,32,0.08)]">
+              <label
+                className="text-[0.66rem] font-black uppercase tracking-[0.22em] text-[color:var(--wk-amethyst)]"
+                htmlFor="waykeeper-welcome-time-zone"
+              >
+                Time zone
+              </label>
+              <select
+                className="mt-2 w-full rounded-[10px] border border-[rgba(14,20,51,0.16)] bg-[color:var(--wk-paper)] px-3 py-2 text-sm font-semibold text-[color:var(--wk-ink)] outline-none transition focus:border-[color:var(--wk-cobalt)] focus:ring-2 focus:ring-[rgba(45,65,230,0.18)]"
+                id="waykeeper-welcome-time-zone"
+                onChange={(event) => onTimeZoneChange(event.target.value)}
+                value={selectedTimeZone}
+              >
+                {timeZoneOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
+                Used for the live welcome clock. Plans still save locally on this device.
+              </p>
+            </section>
+          ) : null}
         </div>
 
         <div className="relative min-h-[36rem] overflow-hidden bg-[color:var(--wk-ink)]">
@@ -206,7 +239,7 @@ export function WelcomeResumeScreen({
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,252,244,0.95)_0%,rgba(255,252,244,0.64)_8%,rgba(8,13,42,0.02)_38%,rgba(8,13,42,0.18)_100%)]" />
           <div className="absolute bottom-6 left-6 right-6 max-w-[31rem] rounded-[8px] border border-white/22 bg-[rgba(255,252,244,0.86)] p-5 text-[color:var(--wk-ink)] shadow-[0_22px_60px_rgba(3,8,34,0.2)] backdrop-blur md:left-auto">
             <p className="text-[0.68rem] font-black uppercase tracking-[0.26em] text-[color:var(--wk-coral)]">
-              What you get
+              Waykeeper offers you
             </p>
             <p className="mt-2 font-display text-[clamp(1.55rem,2.6vw,2.3rem)] leading-none tracking-[-0.05em]">
               A readable route for today, with breaks and overflow handled.

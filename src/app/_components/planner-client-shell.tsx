@@ -268,9 +268,18 @@ const SHOULD_SKIP_WELCOME =
 const SHOULD_SHOW_DEV_TOOLS =
   process.env.NEXT_PUBLIC_WAYKEEPER_SHOW_DEV_TOOLS === "1";
 const THEME_STORAGE_KEY = "waykeeper-theme-mode";
+const WAYKEEPER_TIME_ZONE_STORAGE_KEY = "waykeeper-time-zone";
 const SHOULD_REQUEST_AI_DIAGNOSTICS =
   process.env.NODE_ENV !== "production" ||
   process.env.NEXT_PUBLIC_WAYKEEPER_FORCE_AI_DIAGNOSTICS === "1";
+const BASE_WAYKEEPER_TIME_ZONE_OPTIONS = [
+  { label: "Anchorage", value: "America/Anchorage" },
+  { label: "Pacific", value: "America/Los_Angeles" },
+  { label: "Mountain", value: "America/Denver" },
+  { label: "Central", value: "America/Chicago" },
+  { label: "Eastern", value: "America/New_York" },
+  { label: "UTC", value: "UTC" },
+];
 
 function getInitialEntryView(): EntryView {
   if (
@@ -291,6 +300,69 @@ function loadWaykeeperThemeMode(): WaykeeperThemeMode {
   return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark"
     ? "dark"
     : "light";
+}
+
+function isValidTimeZone(timeZone: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getBrowserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
+function loadWaykeeperTimeZone() {
+  const browserTimeZone = getBrowserTimeZone();
+
+  if (typeof window === "undefined") {
+    return browserTimeZone;
+  }
+
+  const storedTimeZone = window.localStorage.getItem(
+    WAYKEEPER_TIME_ZONE_STORAGE_KEY
+  );
+
+  return storedTimeZone && isValidTimeZone(storedTimeZone)
+    ? storedTimeZone
+    : browserTimeZone;
+}
+
+function getWaykeeperTimeZoneOptions(selectedTimeZone: string) {
+  const hasSelectedOption = BASE_WAYKEEPER_TIME_ZONE_OPTIONS.some(
+    (option) => option.value === selectedTimeZone
+  );
+
+  if (hasSelectedOption) {
+    return BASE_WAYKEEPER_TIME_ZONE_OPTIONS;
+  }
+
+  return [
+    {
+      label: `Local (${selectedTimeZone.replaceAll("_", " ")})`,
+      value: selectedTimeZone,
+    },
+    ...BASE_WAYKEEPER_TIME_ZONE_OPTIONS,
+  ];
+}
+
+function formatWelcomeClockLabel(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "long",
+    timeZone,
+    timeZoneName: "short",
+    weekday: "long",
+  }).format(date);
 }
 
 export interface TimelineViewportRequest {
@@ -1032,6 +1104,10 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   const [themeMode, setThemeMode] = useState<WaykeeperThemeMode>(() =>
     loadWaykeeperThemeMode()
   );
+  const [waykeeperTimeZone, setWaykeeperTimeZone] = useState(() =>
+    loadWaykeeperTimeZone()
+  );
+  const [welcomeClockDate, setWelcomeClockDate] = useState(() => new Date());
   const [plannerTimeMode, setPlannerTimeMode] =
     useState<PlannerTimeMode>("manual");
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
@@ -1262,6 +1338,25 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
 
     window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
   }, [hasHydrated, themeMode]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setWelcomeClockDate(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated || typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      WAYKEEPER_TIME_ZONE_STORAGE_KEY,
+      waykeeperTimeZone
+    );
+  }, [hasHydrated, waykeeperTimeZone]);
 
   const syncCarryForwardInbox = useEffectEvent(
     (draftScheduleResponse: PlannerStoreState["draftScheduleResponse"]) => {
@@ -4492,17 +4587,12 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   const resumeExecution = routeExists
     ? deriveDayPlanExecutionSnapshot(plannerView.dayPlan, plannerRuntime.currentTime)
     : null;
-  const currentDateLabel = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(
-    new Date(
-      routeExists
-        ? plannerView.dayPlan.planningWindow.startTime
-        : formatLocalIsoDateTime()
-      )
+  const currentDateLabel = formatWelcomeClockLabel(
+    welcomeClockDate,
+    waykeeperTimeZone
   );
+  const waykeeperTimeZoneOptions =
+    getWaykeeperTimeZoneOptions(waykeeperTimeZone);
 
   function handleFloatingBackStep() {
     clearReplanUi();
@@ -4542,12 +4632,15 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
         onResumePlan={handleResumeFromWelcome}
         onSampleDay={handleSampleDayFromWelcome}
         onStartToday={handleStartTodayFromWelcome}
+        onTimeZoneChange={setWaykeeperTimeZone}
         progressLabel={
           resumeExecution
             ? `${resumeExecution.doneBlocks.length} complete`
             : undefined
         }
         resumeBlockTitle={resumeExecution?.currentDisplayBlock?.title}
+        selectedTimeZone={waykeeperTimeZone}
+        timeZoneOptions={waykeeperTimeZoneOptions}
       />
     );
   }
