@@ -90,11 +90,13 @@ export function WaykeeperPanel({
 export function GeneratedWaykeeperAsset({
   alt,
   className = "",
+  imageClassName = "",
   src,
   sizes = "100vw",
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
   alt: string;
+  imageClassName?: string;
   sizes?: string;
   src: string;
 }) {
@@ -105,7 +107,7 @@ export function GeneratedWaykeeperAsset({
     >
       <Image
         alt={alt}
-        className="object-cover"
+        className={`object-cover ${imageClassName}`}
         draggable={false}
         fill
         sizes={sizes}

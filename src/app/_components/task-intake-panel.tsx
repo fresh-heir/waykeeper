@@ -1347,10 +1347,12 @@ function DaySetupConcept({
             ) : null}
           </div>
 
-          <div className="relative z-10 mt-5 overflow-hidden rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-[color:var(--wk-ink)]">
+          <div className="relative z-10 mt-5 overflow-hidden rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-[color:var(--wk-ink)] shadow-[0_20px_44px_rgba(3,8,34,0.12)]">
             <GeneratedWaykeeperAsset
               {...waykeeperAssets.sampleDayHero}
-              className="h-52 w-full"
+              className="h-[34rem] w-full"
+              imageClassName="object-[56%_50%]"
+              sizes="24rem"
             />
           </div>
         </aside>
