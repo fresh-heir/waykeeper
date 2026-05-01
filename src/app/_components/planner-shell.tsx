@@ -10,11 +10,10 @@ import { DayTimeline } from "@/app/_components/day-timeline";
 import { RouteWaypointList } from "@/app/_components/route-waypoint-list";
 import {
   BotanicalGlyph,
-  Starcut,
   WaykeeperButton,
   type WaykeeperThemeMode,
 } from "@/app/_components/waykeeper-ui";
-import { OracleSparkle, WaykeeperMark } from "@/app/_components/waykeeper-brand";
+import { OracleWindowMark, WaykeeperMark } from "@/app/_components/waykeeper-brand";
 import {
   getPlannerExportText,
   type PlannerExportBundle,
@@ -65,6 +64,8 @@ interface PlannerShellProps {
   onLoadAndBuildDevScenario: (scenarioId: string) => void;
   onLoadDevScenario: (scenarioId: string) => void;
   onBackToDaySetup: () => void;
+  onBackStep: () => void;
+  onGoHome: () => void;
   onMarkBlockComplete: (blockId: string) => void;
   onOracleCloseAdjust: () => void;
   onOracleOpenAdjust: () => void;
@@ -190,19 +191,19 @@ const oracleBackdropStyles: Record<
 > = {
   morning: {
     backgroundImage:
-      "linear-gradient(180deg, rgba(250, 240, 221, 0.84) 0%, rgba(243, 239, 248, 0.4) 58%, rgba(255, 255, 255, 0.14) 100%)",
+      "linear-gradient(180deg, rgba(244, 237, 255, 0.9) 0%, rgba(233, 224, 255, 0.52) 58%, rgba(255, 255, 255, 0.16) 100%)",
   },
   day: {
     backgroundImage:
-      "linear-gradient(180deg, rgba(232, 242, 251, 0.82) 0%, rgba(243, 239, 248, 0.36) 58%, rgba(255, 255, 255, 0.12) 100%)",
+      "linear-gradient(180deg, rgba(238, 231, 255, 0.88) 0%, rgba(226, 216, 252, 0.44) 58%, rgba(255, 255, 255, 0.12) 100%)",
   },
   evening: {
     backgroundImage:
-      "linear-gradient(180deg, rgba(248, 229, 216, 0.82) 0%, rgba(241, 230, 241, 0.38) 58%, rgba(255, 255, 255, 0.12) 100%)",
+      "linear-gradient(180deg, rgba(239, 224, 255, 0.88) 0%, rgba(217, 203, 249, 0.48) 58%, rgba(255, 255, 255, 0.12) 100%)",
   },
   night: {
     backgroundImage:
-      "linear-gradient(180deg, rgba(224, 229, 244, 0.78) 0%, rgba(235, 229, 244, 0.42) 58%, rgba(255, 255, 255, 0.1) 100%)",
+      "linear-gradient(180deg, rgba(226, 216, 252, 0.82) 0%, rgba(203, 188, 244, 0.46) 58%, rgba(255, 255, 255, 0.1) 100%)",
   },
 };
 
@@ -225,6 +226,8 @@ export function PlannerShell({
   onLoadAndBuildDevScenario,
   onLoadDevScenario,
   onBackToDaySetup,
+  onBackStep,
+  onGoHome,
   onMarkBlockComplete,
   onOracleCloseAdjust,
   onOracleOpenAdjust,
@@ -285,6 +288,16 @@ export function PlannerShell({
   const routeIntroTextClass = isLightTheme
     ? "text-[color:var(--wk-ink-muted)]"
     : "text-white/68";
+  const floatingViewLabel = routeExists
+    ? "Route"
+    : stage === "interpretation"
+      ? "Review"
+      : "Setup";
+  const floatingBackLabel = routeExists
+    ? "Back to review"
+    : stage === "interpretation"
+      ? "Back to setup"
+      : "Home";
 
   return (
     <main
@@ -341,9 +354,15 @@ export function PlannerShell({
                   ) : null}
                   <div className="flex flex-wrap gap-2">
                     <WaykeeperButton
-                      className="min-h-10 flex-1 justify-center py-2"
+                      className="min-h-12 flex-1 justify-center py-2.5 uppercase tracking-[0.18em]"
+                      leading={
+                        <span className="grid size-6 place-items-center rounded-full border border-white/35 bg-white/15 text-xs">
+                          ←
+                        </span>
+                      }
                       onClick={onBackToDaySetup}
-                      tone="cream"
+                      tone="violet"
+                      trailing={<span aria-hidden="true">Setup</span>}
                     >
                       Edit day setup
                     </WaykeeperButton>
@@ -430,6 +449,13 @@ export function PlannerShell({
           </div>
         )}
       </div>
+      <FloatingViewMenu
+        backLabel={floatingBackLabel}
+        currentViewLabel={floatingViewLabel}
+        onBackStep={onBackStep}
+        onGoHome={onGoHome}
+        themeMode={themeMode}
+      />
     </main>
   );
 }
@@ -482,7 +508,7 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
               {index === 0 ? (
                 <span className="h-0.5 w-4 rotate-[-38deg] bg-current" />
               ) : index === 1 ? (
-                <Starcut className="size-5" />
+                <OracleWindowMark className="size-5" title="" />
               ) : (
                 <span className="size-3 rounded-sm border border-current" />
               )}
@@ -514,6 +540,59 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
         </div>
       </div>
     </aside>
+  );
+}
+
+function FloatingViewMenu({
+  backLabel,
+  currentViewLabel,
+  onBackStep,
+  onGoHome,
+  themeMode,
+}: {
+  backLabel: string;
+  currentViewLabel: string;
+  onBackStep: () => void;
+  onGoHome: () => void;
+  themeMode: WaykeeperThemeMode;
+}) {
+  const isLightTheme = themeMode === "light";
+
+  return (
+    <nav
+      aria-label="View navigation"
+      className={`fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border p-1 shadow-[0_18px_50px_rgba(2,8,32,0.22)] backdrop-blur-xl ${
+        isLightTheme
+          ? "border-[rgba(14,20,51,0.16)] bg-[rgba(255,252,244,0.92)] text-[color:var(--wk-ink)]"
+          : "border-white/16 bg-[rgba(2,9,31,0.84)] text-white"
+      }`}
+    >
+      <span
+        className={`hidden px-3 text-[10px] font-black uppercase tracking-[0.18em] sm:inline ${
+          isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
+        }`}
+      >
+        {currentViewLabel}
+      </span>
+      <button
+        className={`rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 ${
+          isLightTheme
+            ? "bg-[rgba(226,207,255,0.7)] text-[color:var(--wk-ink)] hover:bg-[rgba(226,207,255,0.96)]"
+            : "bg-white/10 text-white hover:bg-white/16"
+        }`}
+        onClick={onBackStep}
+        type="button"
+      >
+        {backLabel}
+      </button>
+      <button
+        className="rounded-full bg-[color:var(--wk-cobalt)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[color:var(--wk-ink)]"
+        onClick={onGoHome}
+        type="button"
+      >
+        Home
+      </button>
+    </nav>
   );
 }
 
@@ -1506,8 +1585,8 @@ function OraclePanel({
       data-oracle-reduced-motion={prefersReducedMotion ? "true" : "false"}
       className={`waykeeper-panel-glow relative isolate overflow-hidden rounded-[8px] border p-4 text-[color:var(--wk-ink)] shadow-[0_24px_80px_rgba(2,8,32,0.22)] backdrop-blur ${
         isLightTheme
-          ? "border-[rgba(14,20,51,0.14)] bg-[rgba(255,252,244,0.94)]"
-          : "border-[rgba(255,247,214,0.18)] bg-[rgba(2,9,31,0.88)]"
+          ? "border-[rgba(119,88,216,0.28)] bg-[linear-gradient(180deg,rgba(249,245,255,0.96),rgba(237,230,255,0.9))]"
+          : "border-[rgba(176,151,255,0.3)] bg-[linear-gradient(180deg,rgba(28,18,68,0.94),rgba(12,7,36,0.9))]"
       }`}
     >
       <OracleAtmosphericBackdrop
@@ -1521,7 +1600,7 @@ function OraclePanel({
             key={oracleViewModel.mode}
             className="flex items-start gap-2.5 animate-oracle-heading-settle"
           >
-            <OracleSparkle className="mt-0.5 size-9 shrink-0 drop-shadow-[0_10px_20px_rgba(255,73,132,0.22)]" />
+            <OracleWindowMark className="mt-0.5 size-10 shrink-0 drop-shadow-[0_10px_20px_rgba(119,88,216,0.28)]" />
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[color:var(--planner-accent-oracle-text)]">
                 Oracle
@@ -1697,8 +1776,8 @@ function OracleAtmosphericBackdrop({
       <div
         className={`absolute inset-0 rounded-[inherit] ${
           isLightTheme
-            ? "bg-[radial-gradient(circle_at_72%_8%,rgba(255,73,132,0.12),transparent_14rem),radial-gradient(circle_at_18%_18%,rgba(75,224,202,0.18),transparent_16rem),linear-gradient(180deg,rgba(255,252,244,0.58),rgba(255,255,255,0.12))] opacity-75"
-            : "bg-[radial-gradient(circle_at_70%_6%,rgba(255,73,132,0.34),transparent_18rem),radial-gradient(circle_at_18%_18%,rgba(75,224,202,0.24),transparent_16rem),linear-gradient(180deg,rgba(2,9,31,0.18),rgba(2,9,31,0.78))] opacity-90"
+            ? "bg-[radial-gradient(circle_at_72%_8%,rgba(119,88,216,0.18),transparent_14rem),radial-gradient(circle_at_18%_18%,rgba(226,207,255,0.42),transparent_16rem),linear-gradient(180deg,rgba(249,245,255,0.62),rgba(255,255,255,0.1))] opacity-85"
+            : "bg-[radial-gradient(circle_at_70%_6%,rgba(176,151,255,0.32),transparent_18rem),radial-gradient(circle_at_18%_18%,rgba(119,88,216,0.34),transparent_16rem),linear-gradient(180deg,rgba(20,12,54,0.24),rgba(9,5,30,0.82))] opacity-95"
         }`}
       />
       <div
@@ -1708,7 +1787,9 @@ function OracleAtmosphericBackdrop({
       />
       <div
         className={`absolute inset-0 rounded-[inherit] border ${
-          isLightTheme ? "border-[rgba(14,20,51,0.08)]" : "border-white/20"
+          isLightTheme
+            ? "border-[rgba(119,88,216,0.14)]"
+            : "border-[rgba(226,207,255,0.24)]"
         }`}
       />
     </div>

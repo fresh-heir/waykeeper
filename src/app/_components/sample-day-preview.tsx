@@ -5,7 +5,7 @@ import {
   WaykeeperButton,
   waykeeperAssets,
 } from "@/app/_components/waykeeper-ui";
-import { OracleSparkle, WaykeeperMark } from "@/app/_components/waykeeper-brand";
+import { OracleWindowMark, WaykeeperMark } from "@/app/_components/waykeeper-brand";
 import type { ReactNode } from "react";
 
 interface SampleDayPreviewProps {
@@ -257,7 +257,7 @@ export function SampleDayPreview({
                   ))}
                 </ul>
               </div>
-              <ExperienceItem icon={<OracleSparkle className="size-8" title="" />}>
+              <ExperienceItem icon={<OracleWindowMark className="size-8" title="" />}>
                 Focus blocks with real task names.
               </ExperienceItem>
               <ExperienceItem icon={<BotanicalGlyph className="h-9 w-7" tone="jade" />}>

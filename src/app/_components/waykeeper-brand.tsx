@@ -45,6 +45,57 @@ export function OracleSparkle({
   );
 }
 
+export function OracleWindowMark({
+  className,
+  title = "Oracle window mark",
+  ...props
+}: SvgComponentProps) {
+  return (
+    <svg
+      aria-hidden={title ? undefined : true}
+      className={className}
+      fill="none"
+      role={title ? "img" : undefined}
+      viewBox="0 0 96 96"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <rect fill="var(--wk-amethyst)" height="96" rx="24" width="96" />
+      <path
+        d="M22 78V40.5C22 23.4 33.9 13 48 13s26 10.4 26 27.5V78H22Z"
+        fill="rgba(226, 207, 255, 0.62)"
+      />
+      <path
+        d="M29 73V41.2C29 28.2 37.1 20 48 20s19 8.2 19 21.2V73H29Z"
+        fill="var(--wk-ink)"
+      />
+      <path
+        d="M48 28 53.4 45.1 70.5 50.5 53.4 55.9 48 73 42.6 55.9 25.5 50.5 42.6 45.1 48 28Z"
+        fill="var(--wk-pearl)"
+        stroke="var(--wk-ink)"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M48 36.2 50.7 47.8 62.3 50.5 50.7 53.2 48 64.8 45.3 53.2 33.7 50.5 45.3 47.8 48 36.2Z"
+        fill="var(--wk-spectral-cyan)"
+        opacity="0.64"
+      />
+      <path
+        d="M72 20 73.8 26.2 80 28 73.8 29.8 72 36 70.2 29.8 64 28 70.2 26.2 72 20Z"
+        fill="var(--wk-coral)"
+      />
+      <path
+        d="M24 76h48"
+        stroke="var(--wk-ruby)"
+        strokeLinecap="round"
+        strokeWidth="3"
+      />
+    </svg>
+  );
+}
+
 export function WaykeeperMark({
   className,
   title = "Waykeeper mark",

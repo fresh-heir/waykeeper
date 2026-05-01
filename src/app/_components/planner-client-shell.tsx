@@ -4395,8 +4395,24 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
       routeExists
         ? plannerView.dayPlan.planningWindow.startTime
         : formatLocalIsoDateTime()
-    )
+      )
   );
+
+  function handleFloatingBackStep() {
+    clearReplanUi();
+
+    if (state.stage === "draft_route" && routeExists) {
+      setState((previousState) => returnToInterpretation(previousState));
+      return;
+    }
+
+    if (state.stage === "interpretation") {
+      setState((previousState) => returnToDaySetup(previousState));
+      return;
+    }
+
+    setEntryView("welcome_resume");
+  }
 
   if (!hasHydrated) {
     return (
@@ -4507,6 +4523,8 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
         clearReplanUi();
         setState((previousState) => returnToDaySetup(previousState));
       }}
+      onBackStep={handleFloatingBackStep}
+      onGoHome={() => setEntryView("welcome_resume")}
       onResetBlankDay={handleResetBlankDay}
       onSetPlannerTime={handleSetPlannerTime}
       onSelectDevScenario={(scenarioId) =>
