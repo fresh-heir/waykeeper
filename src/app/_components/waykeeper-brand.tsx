@@ -122,6 +122,12 @@ export function WaykeeperMark({
         fill="var(--wk-ink)"
       />
       <path
+        d="M19 70h58"
+        stroke="var(--wk-ruby)"
+        strokeLinecap="round"
+        strokeWidth="3"
+      />
+      <path
         d="M20 71.5c10.3-8.1 19.7-10.7 28-7.7v18.4c-8.9-4.1-18.2-3.2-28 2.8V71.5Z"
         fill="var(--wk-pearl)"
       />
@@ -148,12 +154,6 @@ export function WaykeeperMark({
       <path
         d="M70.5 12 72.1 17.4 77.5 19 72.1 20.6 70.5 26 68.9 20.6 63.5 19 68.9 17.4 70.5 12Z"
         fill="var(--wk-coral)"
-      />
-      <path
-        d="M19 70h58"
-        stroke="var(--wk-ruby)"
-        strokeLinecap="round"
-        strokeWidth="3"
       />
     </svg>
   );
