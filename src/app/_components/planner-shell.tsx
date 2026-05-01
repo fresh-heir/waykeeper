@@ -19,6 +19,7 @@ import {
   type PlannerExportBundle,
   type PlannerExportVariant,
 } from "@/app/_lib/planner/export";
+import type { PlannerDraftSummary } from "@/app/_lib/planner/store";
 import {
   deriveOracleViewModel,
   formatBlockRange,
@@ -46,9 +47,11 @@ import type {
 } from "@/app/_lib/planner-types";
 
 interface PlannerShellProps {
+  activeDraftId: string | null;
   aiDiagnostics: PlannerFlowDiagnosticsState;
   devEngineSettings: PlannerDevEngineSettings;
   devScenarios: PlannerDevScenario[];
+  draftSummaries: PlannerDraftSummary[];
   lastAppliedReplanSummary: ReplanChangeSummary | null;
   leftRail: ReactNode;
   onAdjustPlannerTime: (minutes: number) => void;
@@ -61,8 +64,10 @@ interface PlannerShellProps {
   onDismissReplanAiRefinementOffer: () => void;
   onGenerateReplanPreview: () => void;
   onKeepWaitingForAi: () => void;
+  onDeleteDraft: (draftId: string) => void;
   onLoadAndBuildDevScenario: (scenarioId: string) => void;
   onLoadDevScenario: (scenarioId: string) => void;
+  onLoadDraft: (draftId: string) => void;
   onBackToDaySetup: () => void;
   onBackStep: () => void;
   onGoHome: () => void;
@@ -208,9 +213,11 @@ const oracleBackdropStyles: Record<
 };
 
 export function PlannerShell({
+  activeDraftId,
   aiDiagnostics,
   devEngineSettings,
   devScenarios,
+  draftSummaries,
   lastAppliedReplanSummary,
   leftRail,
   onAdjustPlannerTime,
@@ -223,8 +230,10 @@ export function PlannerShell({
   onDismissReplanAiRefinementOffer,
   onGenerateReplanPreview,
   onKeepWaitingForAi,
+  onDeleteDraft,
   onLoadAndBuildDevScenario,
   onLoadDevScenario,
+  onLoadDraft,
   onBackToDaySetup,
   onBackStep,
   onGoHome,
@@ -450,10 +459,14 @@ export function PlannerShell({
         )}
       </div>
       <FloatingViewMenu
+        activeDraftId={activeDraftId}
         backLabel={floatingBackLabel}
         currentViewLabel={floatingViewLabel}
+        draftSummaries={draftSummaries}
+        onDeleteDraft={onDeleteDraft}
         onBackStep={onBackStep}
         onGoHome={onGoHome}
+        onLoadDraft={onLoadDraft}
         themeMode={themeMode}
       />
     </main>
@@ -544,55 +557,190 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
 }
 
 function FloatingViewMenu({
+  activeDraftId,
   backLabel,
   currentViewLabel,
+  draftSummaries,
+  onDeleteDraft,
   onBackStep,
   onGoHome,
+  onLoadDraft,
   themeMode,
 }: {
+  activeDraftId: string | null;
   backLabel: string;
   currentViewLabel: string;
+  draftSummaries: PlannerDraftSummary[];
+  onDeleteDraft: (draftId: string) => void;
   onBackStep: () => void;
   onGoHome: () => void;
+  onLoadDraft: (draftId: string) => void;
   themeMode: WaykeeperThemeMode;
 }) {
+  const [isPlansOpen, setIsPlansOpen] = useState(false);
   const isLightTheme = themeMode === "light";
 
   return (
-    <nav
-      aria-label="View navigation"
-      className={`fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-full border p-1 shadow-[0_18px_50px_rgba(2,8,32,0.22)] backdrop-blur-xl ${
-        isLightTheme
-          ? "border-[rgba(14,20,51,0.16)] bg-[rgba(255,252,244,0.92)] text-[color:var(--wk-ink)]"
-          : "border-white/16 bg-[rgba(2,9,31,0.84)] text-white"
-      }`}
-    >
-      <span
-        className={`hidden px-3 text-[10px] font-black uppercase tracking-[0.18em] sm:inline ${
-          isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
-        }`}
-      >
-        {currentViewLabel}
-      </span>
-      <button
-        className={`rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 ${
+    <div className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2">
+      {isPlansOpen ? (
+        <section
+          aria-label="Saved plans"
+          className={`w-[min(22rem,calc(100vw-2rem))] rounded-[18px] border p-3 shadow-[0_22px_70px_rgba(2,8,32,0.24)] backdrop-blur-xl ${
+            isLightTheme
+              ? "border-[rgba(14,20,51,0.16)] bg-[rgba(255,252,244,0.96)] text-[color:var(--wk-ink)]"
+              : "border-white/16 bg-[rgba(2,9,31,0.92)] text-white"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--wk-ruby)]">
+                Saved plans
+              </p>
+              <p
+                className={`mt-1 text-xs ${
+                  isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
+                }`}
+              >
+                Reload any draft. Delete the ones you no longer need.
+              </p>
+            </div>
+            <button
+              aria-label="Close saved plans"
+              className={`grid size-8 shrink-0 place-items-center rounded-full border text-sm font-black ${
+                isLightTheme
+                  ? "border-[rgba(14,20,51,0.14)] bg-white/70"
+                  : "border-white/12 bg-white/8"
+              }`}
+              onClick={() => setIsPlansOpen(false)}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            {draftSummaries.length > 0 ? (
+              draftSummaries.slice(0, 6).map((draft) => {
+                const isActive = draft.id === activeDraftId;
+
+                return (
+                  <div
+                    className={`grid gap-2 rounded-[14px] border p-2 ${
+                      isActive
+                        ? isLightTheme
+                          ? "border-[rgba(124,78,220,0.32)] bg-[rgba(226,207,255,0.46)]"
+                          : "border-[rgba(226,207,255,0.28)] bg-[rgba(124,78,220,0.22)]"
+                        : isLightTheme
+                          ? "border-[rgba(14,20,51,0.12)] bg-white/56"
+                          : "border-white/10 bg-white/6"
+                    }`}
+                    key={draft.id}
+                  >
+                    <button
+                      className="text-left"
+                      onClick={() => {
+                        onLoadDraft(draft.id);
+                        setIsPlansOpen(false);
+                      }}
+                      type="button"
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-black">
+                          {draft.title}
+                        </span>
+                        {isActive ? (
+                          <span className="rounded-full bg-[color:var(--wk-jade)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white">
+                            Open
+                          </span>
+                        ) : null}
+                      </span>
+                      <span
+                        className={`mt-1 block truncate text-xs ${
+                          isLightTheme
+                            ? "text-[color:var(--wk-ink-muted)]"
+                            : "text-white/58"
+                        }`}
+                      >
+                        {draft.subtitle}
+                      </span>
+                    </button>
+                    <button
+                      className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
+                        isLightTheme
+                          ? "border-[rgba(230,55,93,0.32)] text-[color:var(--wk-ruby)] hover:bg-[rgba(230,55,93,0.08)]"
+                          : "border-[rgba(255,92,128,0.34)] text-[color:var(--wk-ruby)] hover:bg-white/8"
+                      }`}
+                      onClick={() => onDeleteDraft(draft.id)}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <p
+                className={`rounded-[14px] border p-3 text-sm ${
+                  isLightTheme
+                    ? "border-[rgba(14,20,51,0.12)] text-[color:var(--wk-ink-muted)]"
+                    : "border-white/10 text-white/58"
+                }`}
+              >
+                Your current plan will appear here after the first autosave.
+              </p>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      <nav
+        aria-label="View navigation"
+        className={`flex items-center gap-1.5 rounded-full border p-1 shadow-[0_18px_50px_rgba(2,8,32,0.22)] backdrop-blur-xl ${
           isLightTheme
-            ? "bg-[rgba(226,207,255,0.7)] text-[color:var(--wk-ink)] hover:bg-[rgba(226,207,255,0.96)]"
-            : "bg-white/10 text-white hover:bg-white/16"
+            ? "border-[rgba(14,20,51,0.16)] bg-[rgba(255,252,244,0.92)] text-[color:var(--wk-ink)]"
+            : "border-white/16 bg-[rgba(2,9,31,0.84)] text-white"
         }`}
-        onClick={onBackStep}
-        type="button"
       >
-        {backLabel}
-      </button>
-      <button
-        className="rounded-full bg-[color:var(--wk-cobalt)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[color:var(--wk-ink)]"
-        onClick={onGoHome}
-        type="button"
-      >
-        Home
-      </button>
-    </nav>
+        <span
+          className={`hidden px-3 text-[10px] font-black uppercase tracking-[0.18em] sm:inline ${
+            isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
+          }`}
+        >
+          {currentViewLabel}
+        </span>
+        <button
+          aria-expanded={isPlansOpen}
+          className={`rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 ${
+            isLightTheme
+              ? "bg-[rgba(199,238,92,0.42)] text-[color:var(--wk-ink)] hover:bg-[rgba(199,238,92,0.7)]"
+              : "bg-[rgba(199,238,92,0.16)] text-white hover:bg-[rgba(199,238,92,0.24)]"
+          }`}
+          onClick={() => setIsPlansOpen((isOpen) => !isOpen)}
+          type="button"
+        >
+          Plans
+          {draftSummaries.length > 0 ? ` ${draftSummaries.length}` : ""}
+        </button>
+        <button
+          className={`rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] transition hover:-translate-y-0.5 ${
+            isLightTheme
+              ? "bg-[rgba(226,207,255,0.7)] text-[color:var(--wk-ink)] hover:bg-[rgba(226,207,255,0.96)]"
+              : "bg-white/10 text-white hover:bg-white/16"
+          }`}
+          onClick={onBackStep}
+          type="button"
+        >
+          {backLabel}
+        </button>
+        <button
+          className="rounded-full bg-[color:var(--wk-cobalt)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[color:var(--wk-ink)]"
+          onClick={onGoHome}
+          type="button"
+        >
+          Home
+        </button>
+      </nav>
+    </div>
   );
 }
 

@@ -68,6 +68,8 @@ import type {
 } from "@/app/_lib/planner-types";
 
 const STORAGE_KEY = "waykeeper-milestone-3-planner";
+const ACTIVE_DRAFT_STORAGE_KEY = "waykeeper-active-plan-draft";
+const DRAFT_LIBRARY_STORAGE_KEY = "waykeeper-plan-drafts";
 
 export type PlannerTimeMode = "live" | "manual";
 
@@ -110,6 +112,30 @@ export interface PersistedPlannerSession {
   plannerTimeMode?: PlannerTimeMode;
   selectedReplanMode?: ReplanMode;
   selectedScenarioId?: string;
+}
+
+interface PersistedPlannerDraftRecord {
+  createdAt: string;
+  id: string;
+  session: PersistedPlannerSessionRecord;
+  subtitle: string;
+  title: string;
+  updatedAt: string;
+}
+
+interface PersistedPlannerDraftLibrary {
+  drafts: PersistedPlannerDraftRecord[];
+  version: 1;
+}
+
+export interface PlannerDraftSummary {
+  createdAt: string;
+  hasRoute: boolean;
+  id: string;
+  stage: PlannerStage;
+  subtitle: string;
+  title: string;
+  updatedAt: string;
 }
 
 export function createPlannerStoreState(planner: MockPlannerState): PlannerStoreState {
@@ -262,9 +288,310 @@ export function loadPlannerStoreState(
   }
 }
 
+function hydratePlannerSessionRecord(
+  planner: MockPlannerState,
+  parsedValue: Partial<PersistedPlannerSessionRecord>
+): PersistedPlannerSession | null {
+  const persistedPlannerState = isPersistedPlannerSessionRecord(parsedValue)
+    ? parsedValue.plannerState
+    : null;
+
+  if (!persistedPlannerState) {
+    return null;
+  }
+
+  const persistedCurrentTime =
+    typeof parsedValue.plannerCurrentTime === "string"
+      ? parsedValue.plannerCurrentTime
+      : planner.currentTime;
+  const normalizedDraftScheduleResponse = persistedPlannerState.draftScheduleResponse
+    ? normalizeDraftScheduleResponse(
+        persistedPlannerState.draftScheduleResponse,
+        persistedCurrentTime
+      )
+    : null;
+  const hydrationValidationWarnings = normalizedDraftScheduleResponse
+    ? validateGeneratedDayPlan(normalizedDraftScheduleResponse.dayPlan, {
+        currentTime: persistedCurrentTime,
+        allowProductiveBreaks:
+          normalizedDraftScheduleResponse.dayPlan.breakMode === "productive",
+        carryForwardItems: normalizedDraftScheduleResponse.carryForwardItems,
+        dueWarnings: normalizedDraftScheduleResponse.dueWarnings,
+        unplacedTasks: normalizedDraftScheduleResponse.unplacedTasks,
+      }).warnings
+    : [];
+  const routeMessaging = normalizedDraftScheduleResponse
+    ? deriveRouteMessaging({
+        currentTime: persistedCurrentTime,
+        draftScheduleResponse: normalizedDraftScheduleResponse,
+        validationWarnings: hydrationValidationWarnings,
+      })
+    : {
+        routeHonestyWarnings: [] as string[],
+        oracleAdvice: [] as string[],
+      };
+
+  return {
+    plannerCurrentTime:
+      typeof parsedValue.plannerCurrentTime === "string"
+        ? parsedValue.plannerCurrentTime
+        : undefined,
+    plannerState: {
+      stage: persistedPlannerState.stage,
+      intakeDraft: {
+        ...persistedPlannerState.intakeDraft,
+        csvText: persistedPlannerState.intakeDraft.csvText ?? "",
+        profileName: persistedPlannerState.intakeDraft.profileName ?? "",
+        profileJourney:
+          persistedPlannerState.intakeDraft.profileJourney ?? "building",
+        profilePriorities: Array.isArray(
+          persistedPlannerState.intakeDraft.profilePriorities
+        )
+          ? persistedPlannerState.intakeDraft.profilePriorities
+          : ["focus", "learning"],
+        profileRhythm:
+          persistedPlannerState.intakeDraft.profileRhythm ??
+          "steady_builder",
+        profilePreference:
+          persistedPlannerState.intakeDraft.profilePreference ?? "",
+        breakCadence: normalizeBreakCadence(
+          persistedPlannerState.intakeDraft.breakCadence as
+            | BreakCadence
+            | "focus_60"
+            | undefined
+        ),
+        inputMode: isDaySetupInputMode(
+          persistedPlannerState.intakeDraft.inputMode
+        )
+          ? persistedPlannerState.intakeDraft.inputMode
+          : "brain_dump",
+        paceMode: normalizePaceMode(
+          persistedPlannerState.intakeDraft.paceMode as PaceMode | undefined
+        ),
+      },
+      intakeCarryForwardItems:
+        persistedPlannerState.intakeCarryForwardItems ?? [],
+      errors: createEmptyDaySetupErrors(),
+      warnings: persistedPlannerState.warnings,
+      parsedTaskResponse: persistedPlannerState.parsedTaskResponse,
+      draftScheduleResponse: normalizedDraftScheduleResponse,
+      plannerWarnings: mergePlannerWarnings(
+        persistedPlannerState.plannerWarnings,
+        [
+          ...(normalizedDraftScheduleResponse?.warnings ?? []),
+          ...hydrationValidationWarnings,
+        ]
+      ),
+      routeHonestyWarnings: routeMessaging.routeHonestyWarnings,
+      oracleAdvice: routeMessaging.oracleAdvice,
+    },
+    selectedReplanMode: isReplanMode(parsedValue.selectedReplanMode)
+      ? parsedValue.selectedReplanMode
+      : undefined,
+    plannerTimeMode: isPlannerTimeMode(parsedValue.plannerTimeMode)
+      ? parsedValue.plannerTimeMode
+      : undefined,
+    selectedScenarioId:
+      typeof parsedValue.selectedScenarioId === "string"
+        ? parsedValue.selectedScenarioId
+        : undefined,
+  };
+}
+
+function loadPlannerDraftLibrary(): PersistedPlannerDraftLibrary {
+  if (typeof window === "undefined") {
+    return {
+      version: 1,
+      drafts: [],
+    };
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(DRAFT_LIBRARY_STORAGE_KEY);
+
+    if (!rawValue) {
+      return {
+        version: 1,
+        drafts: [],
+      };
+    }
+
+    const parsedValue = JSON.parse(rawValue) as Partial<PersistedPlannerDraftLibrary>;
+
+    if (!Array.isArray(parsedValue.drafts)) {
+      return {
+        version: 1,
+        drafts: [],
+      };
+    }
+
+    return {
+      version: 1,
+      drafts: parsedValue.drafts.filter(isPersistedPlannerDraftRecord),
+    };
+  } catch {
+    return {
+      version: 1,
+      drafts: [],
+    };
+  }
+}
+
+function savePlannerDraftLibrary(library: PersistedPlannerDraftLibrary) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(DRAFT_LIBRARY_STORAGE_KEY, JSON.stringify(library));
+}
+
+function upsertPlannerDraft(
+  draftId: string,
+  session: PersistedPlannerSessionRecord
+) {
+  const library = loadPlannerDraftLibrary();
+  const existingDraft = library.drafts.find((draft) => draft.id === draftId);
+  const now = new Date().toISOString();
+  const metadata = getDraftMetadata(session);
+  const nextDraft: PersistedPlannerDraftRecord = {
+    createdAt: existingDraft?.createdAt ?? now,
+    id: draftId,
+    session,
+    subtitle: metadata.subtitle,
+    title: metadata.title,
+    updatedAt: now,
+  };
+  const nextDrafts = [
+    nextDraft,
+    ...library.drafts.filter((draft) => draft.id !== draftId),
+  ].slice(0, 12);
+
+  savePlannerDraftLibrary({
+    version: 1,
+    drafts: nextDrafts,
+  });
+}
+
+function getDraftMetadata(session: PersistedPlannerSessionRecord) {
+  const draft = session.plannerState.intakeDraft;
+  const route = session.plannerState.draftScheduleResponse;
+  const date =
+    route?.dayPlan.date ??
+    session.plannerCurrentTime?.slice(0, 10) ??
+    draft.planningStart.slice(0, 10);
+  const dateLabel = formatDraftDateLabel(date);
+  const owner = draft.profileName.trim();
+  const title = owner ? `${owner}'s ${dateLabel} route` : `${dateLabel} route`;
+  const taskCount =
+    route?.dayPlan.tasks.length ?? session.plannerState.parsedTaskResponse?.tasks.length;
+  const subtitleParts = [
+    route ? "Built route" : "Draft setup",
+    typeof taskCount === "number" ? `${taskCount} tasks` : null,
+  ].filter(Boolean);
+
+  return {
+    title,
+    subtitle: subtitleParts.join(" · "),
+  };
+}
+
+function formatDraftDateLabel(date: string) {
+  const parsedDate = new Date(`${date}T12:00:00`);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Saved plan";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(parsedDate);
+}
+
+export function createPlannerDraftId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `draft-${crypto.randomUUID()}`;
+  }
+
+  return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function getActivePlannerDraftId() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(ACTIVE_DRAFT_STORAGE_KEY);
+}
+
+export function setActivePlannerDraftId(draftId: string | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (draftId) {
+    window.localStorage.setItem(ACTIVE_DRAFT_STORAGE_KEY, draftId);
+    return;
+  }
+
+  window.localStorage.removeItem(ACTIVE_DRAFT_STORAGE_KEY);
+}
+
+export function loadPlannerDraftSummaries(): PlannerDraftSummary[] {
+  return loadPlannerDraftLibrary().drafts.map((draft) => ({
+    createdAt: draft.createdAt,
+    hasRoute: Boolean(draft.session.plannerState.draftScheduleResponse),
+    id: draft.id,
+    stage: draft.session.plannerState.stage,
+    subtitle: draft.subtitle,
+    title: draft.title,
+    updatedAt: draft.updatedAt,
+  }));
+}
+
+export function loadPlannerDraftSession(
+  planner: MockPlannerState,
+  draftId: string
+): PersistedPlannerSession | null {
+  const draft = loadPlannerDraftLibrary().drafts.find(
+    (entry) => entry.id === draftId
+  );
+
+  if (!draft) {
+    return null;
+  }
+
+  return hydratePlannerSessionRecord(planner, draft.session);
+}
+
+export function deletePlannerDraft(draftId: string) {
+  const library = loadPlannerDraftLibrary();
+  const nextDrafts = library.drafts.filter((draft) => draft.id !== draftId);
+
+  savePlannerDraftLibrary({
+    version: 1,
+    drafts: nextDrafts,
+  });
+
+  if (getActivePlannerDraftId() === draftId) {
+    setActivePlannerDraftId(nextDrafts[0]?.id ?? null);
+  }
+
+  return nextDrafts.map((draft) => ({
+    createdAt: draft.createdAt,
+    hasRoute: Boolean(draft.session.plannerState.draftScheduleResponse),
+    id: draft.id,
+    stage: draft.session.plannerState.stage,
+    subtitle: draft.subtitle,
+    title: draft.title,
+    updatedAt: draft.updatedAt,
+  }));
+}
+
 export function persistPlannerStoreState(
   state: PlannerStoreState,
   options?: {
+    activeDraftId?: string;
     plannerCurrentTime?: string;
     plannerTimeMode?: PlannerTimeMode;
     selectedReplanMode?: ReplanMode;
@@ -296,6 +623,10 @@ export function persistPlannerStoreState(
   };
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistableSession));
+
+  if (options?.activeDraftId) {
+    upsertPlannerDraft(options.activeDraftId, persistableSession);
+  }
 }
 
 export function setPlannerCurrentTime(
@@ -1414,6 +1745,21 @@ function isPersistedPlannerSessionRecord(
   value: Partial<PersistedPlannerSessionRecord>
 ): value is PersistedPlannerSessionRecord {
   return Boolean(value && value.plannerState && isPersistedPlannerState(value.plannerState));
+}
+
+function isPersistedPlannerDraftRecord(
+  value: Partial<PersistedPlannerDraftRecord>
+): value is PersistedPlannerDraftRecord {
+  return Boolean(
+    value &&
+      typeof value.id === "string" &&
+      typeof value.createdAt === "string" &&
+      typeof value.updatedAt === "string" &&
+      typeof value.title === "string" &&
+      typeof value.subtitle === "string" &&
+      value.session &&
+      isPersistedPlannerSessionRecord(value.session ?? {})
+  );
 }
 
 function isDaySetupInputMode(value: unknown): value is DaySetupInputMode {

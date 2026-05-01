@@ -10,11 +10,16 @@ import {
   waykeeperAssets,
 } from "@/app/_components/waykeeper-ui";
 import { OracleSparkle, WaykeeperMark } from "@/app/_components/waykeeper-brand";
+import type { PlannerDraftSummary } from "@/app/_lib/planner/store";
 
 interface WelcomeResumeScreenProps {
+  activeDraftId?: string | null;
   currentDateLabel: string;
+  draftSummaries?: PlannerDraftSummary[];
   hasResumePlan: boolean;
   nextBlockTitle?: string;
+  onDeleteDraft?: (draftId: string) => void;
+  onLoadDraft?: (draftId: string) => void;
   onResumePlan: () => void;
   onSampleDay: () => void;
   onStartToday: () => void;
@@ -24,9 +29,13 @@ interface WelcomeResumeScreenProps {
 }
 
 export function WelcomeResumeScreen({
+  activeDraftId,
   currentDateLabel,
+  draftSummaries = [],
   hasResumePlan,
   nextBlockTitle,
+  onDeleteDraft,
+  onLoadDraft,
   onImportPlan,
   onResumePlan,
   onSampleDay,
@@ -119,6 +128,43 @@ export function WelcomeResumeScreen({
               </span>
             </WaykeeperButton>
           </div>
+
+          {draftSummaries.length > 1 ? (
+            <section className="mt-6 max-w-[26rem] rounded-[14px] border border-[rgba(14,20,51,0.12)] bg-white/58 p-4 shadow-[0_14px_34px_rgba(2,8,32,0.08)]">
+              <p className="text-[0.66rem] font-black uppercase tracking-[0.22em] text-[color:var(--wk-amethyst)]">
+                Saved drafts
+              </p>
+              <div className="mt-3 grid gap-2">
+                {draftSummaries.slice(0, 4).map((draft) => (
+                  <div
+                    className="flex items-center gap-2 rounded-[10px] border border-[rgba(14,20,51,0.1)] bg-[rgba(255,252,244,0.72)] p-2"
+                    key={draft.id}
+                  >
+                    <button
+                      className="min-w-0 flex-1 text-left normal-case tracking-normal"
+                      onClick={() => onLoadDraft?.(draft.id)}
+                      type="button"
+                    >
+                      <span className="block truncate text-sm font-black text-[color:var(--wk-ink)]">
+                        {draft.title}
+                        {activeDraftId === draft.id ? " · open" : ""}
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-[color:var(--wk-ink-muted)]">
+                        {draft.subtitle}
+                      </span>
+                    </button>
+                    <button
+                      className="rounded-full border border-[rgba(14,20,51,0.14)] px-2 py-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-[color:var(--wk-ink-muted)] transition hover:border-[color:var(--wk-coral)] hover:text-[color:var(--wk-coral)]"
+                      onClick={() => onDeleteDraft?.(draft.id)}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <div className="mt-auto flex flex-wrap items-center gap-3 pt-10 text-[0.78rem] text-[color:var(--wk-ink-muted)]">
             <button

@@ -131,12 +131,17 @@ import {
   buildPlannerView,
   commitReplanPreview,
   createPlannerStoreState,
+  createPlannerDraftId,
+  deletePlannerDraft,
   delayBlock,
   dismissDetectedTaskDueDate,
   getPlannerStoreContext,
+  getActivePlannerDraftId,
   interpretPlannerDraft,
   keepTaskFlexible,
   lockTaskToDetectedTime,
+  loadPlannerDraftSession,
+  loadPlannerDraftSummaries,
   loadPlannerDevScenario,
   loadPlannerStoreState,
   markBlockComplete,
@@ -149,6 +154,7 @@ import {
   setCsvText,
   setDaySetupInputMode,
   setPaceMode,
+  setActivePlannerDraftId,
   setPlannerCurrentTime,
   setPlanningWindowField,
   setProfileField,
@@ -161,6 +167,7 @@ import {
   unlockTaskFromTime,
   updateFixedEvent,
   type PlannerTimeMode,
+  type PlannerDraftSummary,
   type PlannerStoreState,
 } from "@/app/_lib/planner/store";
 import { validateReplannedDayPlan } from "@/app/_lib/planner/validation";
@@ -1027,6 +1034,8 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   );
   const [plannerTimeMode, setPlannerTimeMode] =
     useState<PlannerTimeMode>("manual");
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
+  const [plannerDrafts, setPlannerDrafts] = useState<PlannerDraftSummary[]>([]);
   const [selectedSamplePersonaId, setSelectedSamplePersonaId] =
     useState<SamplePersonaId>(DEFAULT_SAMPLE_PERSONA_ID);
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -1087,9 +1096,15 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   }, [replanPreview]);
 
   const restorePersistedSession = useEffectEvent(() => {
-    const persistedSession = loadPlannerStoreState(planner);
+    const storedActiveDraftId = getActivePlannerDraftId();
+    const draftSession = storedActiveDraftId
+      ? loadPlannerDraftSession(planner, storedActiveDraftId)
+      : null;
+    const persistedSession = draftSession ?? loadPlannerStoreState(planner);
 
     if (!persistedSession) {
+      setActiveDraftId(storedActiveDraftId);
+      setPlannerDrafts(loadPlannerDraftSummaries());
       return false;
     }
 
@@ -1111,6 +1126,9 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
     );
     setPlannerTimeMode(restoreLiveTime ? "live" : "manual");
     setState(persistedSession.plannerState);
+    setActiveDraftId(
+      draftSession && storedActiveDraftId ? storedActiveDraftId : createPlannerDraftId()
+    );
     setCarryForwardInbox(loadCarryForwardInbox());
     setDevEngineSettings(loadPlannerDevEngineSettings());
     setSelectedScenarioId(
@@ -1119,6 +1137,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
           inferSelectedScenarioId(persistedSession.plannerState.intakeDraft)
       )
     );
+    setPlannerDrafts(loadPlannerDraftSummaries());
 
     setSelectedReplanMode(DEFAULT_REPLAN_MODE);
 
@@ -1159,12 +1178,22 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
       return;
     }
 
+    const draftId = activeDraftId ?? createPlannerDraftId();
+
+    if (!activeDraftId) {
+      setActiveDraftId(draftId);
+      setActivePlannerDraftId(draftId);
+    }
+
     persistPlannerStoreState(state, {
+      activeDraftId: draftId,
       plannerCurrentTime: plannerRuntime.currentTime,
       plannerTimeMode,
       selectedScenarioId,
     });
+    setPlannerDrafts(loadPlannerDraftSummaries());
   }, [
+    activeDraftId,
     hasHydrated,
     plannerRuntime.currentTime,
     plannerTimeMode,
@@ -1316,6 +1345,79 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
     if (!options?.keepAppliedSummary) {
       setLastAppliedReplanSummary(null);
     }
+  }
+
+  function activateNewPlannerDraft() {
+    const nextDraftId = createPlannerDraftId();
+
+    setActiveDraftId(nextDraftId);
+    setActivePlannerDraftId(nextDraftId);
+
+    return nextDraftId;
+  }
+
+  function restorePlannerDraft(draftId: string) {
+    const persistedSession = loadPlannerDraftSession(planner, draftId);
+
+    if (!persistedSession) {
+      setPlannerDrafts(deletePlannerDraft(draftId));
+      return false;
+    }
+
+    clearEphemeralUiState();
+    clearAcceptedAiSessions();
+
+    const restoredDate = getRuntimeRestoreDate(planner, persistedSession);
+    const restoreLiveTime = shouldRestoreLivePlannerTime(
+      persistedSession,
+      restoredDate
+    );
+    const restoredCurrentTime = restoreLiveTime
+      ? formatLocalIsoDateTime()
+      : persistedSession.plannerCurrentTime ?? planner.currentTime;
+
+    setPlannerRuntime(
+      createRuntimePlanner(
+        planner,
+        restoredCurrentTime,
+        restoredDate
+      )
+    );
+    setPlannerTimeMode(restoreLiveTime ? "live" : "manual");
+    setState(persistedSession.plannerState);
+    setActiveDraftId(draftId);
+    setActivePlannerDraftId(draftId);
+    setSelectedScenarioId(
+      normalizeScenarioId(
+        persistedSession.selectedScenarioId ??
+          inferSelectedScenarioId(persistedSession.plannerState.intakeDraft)
+      )
+    );
+    setSelectedReplanMode(DEFAULT_REPLAN_MODE);
+    setPlannerDrafts(loadPlannerDraftSummaries());
+    setEntryView("planner");
+
+    return true;
+  }
+
+  function handleDeletePlannerDraft(draftId: string) {
+    const wasActiveDraft = activeDraftId === draftId;
+    const nextDrafts = deletePlannerDraft(draftId);
+
+    setPlannerDrafts(nextDrafts);
+
+    if (!wasActiveDraft) {
+      return;
+    }
+
+    const nextDraftId = nextDrafts[0]?.id;
+
+    if (nextDraftId && restorePlannerDraft(nextDraftId)) {
+      return;
+    }
+
+    handleResetBlankDay({ timeMode: "live" });
+    setEntryView("welcome_resume");
   }
 
   function showOracleEvent(
@@ -3628,6 +3730,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
     clearEphemeralUiState();
     clearAcceptedAiSessions();
     resetSelectedReplanMode();
+    activateNewPlannerDraft();
 
     const nextPlannerRuntime = createRuntimePlanner(
       planner,
@@ -3681,6 +3784,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   function handleImportPlanFromWelcome() {
     clearEphemeralUiState();
     clearAcceptedAiSessions();
+    activateNewPlannerDraft();
 
     const nextPlannerRuntime = createLiveRuntimePlanner(planner);
     const nextContext = getPlannerStoreContext(nextPlannerRuntime);
@@ -3707,6 +3811,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   ) {
     clearEphemeralUiState();
     clearAcceptedAiSessions();
+    activateNewPlannerDraft();
     const nextPlannerRuntime =
       options.timeMode === "live"
         ? createLiveRuntimePlanner(planner)
@@ -4193,6 +4298,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
         );
 
         persistPlannerStoreState(nextState, {
+          activeDraftId: activeDraftId ?? undefined,
           plannerCurrentTime: plannerRuntime.currentTime,
           selectedScenarioId,
         });
@@ -4425,10 +4531,14 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
   if (entryView === "welcome_resume") {
     return (
       <WelcomeResumeScreen
+        activeDraftId={activeDraftId}
         currentDateLabel={currentDateLabel}
+        draftSummaries={plannerDrafts}
         hasResumePlan={routeExists}
         nextBlockTitle={resumeExecution?.nextBlock?.title}
+        onDeleteDraft={handleDeletePlannerDraft}
         onImportPlan={handleImportPlanFromWelcome}
+        onLoadDraft={restorePlannerDraft}
         onResumePlan={handleResumeFromWelcome}
         onSampleDay={handleSampleDayFromWelcome}
         onStartToday={handleStartTodayFromWelcome}
@@ -4455,8 +4565,10 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
 
   return (
     <PlannerShell
+      activeDraftId={activeDraftId}
       aiDiagnostics={aiDiagnostics}
       devEngineSettings={devEngineSettings}
+      draftSummaries={plannerDrafts}
       onAdjustPlannerTime={handleAdjustPlannerTime}
       onApplyReplanPreview={handleApplyReplanPreview}
       onApplyDraftAiRefinementOffer={handleApplyDraftAiRefinementOffer}
@@ -4490,6 +4602,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
       }}
       onGenerateReplanPreview={handleGenerateReplanPreview}
       onKeepWaitingForAi={handleKeepWaitingForAi}
+      onDeleteDraft={handleDeletePlannerDraft}
       onMarkBlockComplete={(blockId) => {
         clearReplanUi();
         pulseRouteUpdating();
@@ -4516,6 +4629,7 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
       onOracleOpenAdjust={() => setOraclePanelPreference("adjust")}
       onResetPlannerTime={handleResetPlannerTime}
       onLoadDevScenario={(scenarioId) => handleLoadScenario(scenarioId, false)}
+      onLoadDraft={restorePlannerDraft}
       onLoadAndBuildDevScenario={(scenarioId) =>
         handleLoadScenario(scenarioId, true)
       }
