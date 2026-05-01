@@ -337,7 +337,7 @@ export function PlannerShell({
         ) : null}
 
         {routeExists ? (
-          <div className="grid gap-4 xl:grid-cols-[9.5rem_minmax(0,1fr)_minmax(22rem,25rem)] xl:items-start">
+          <div className="grid gap-4 xl:grid-cols-[12rem_minmax(0,1fr)_minmax(22rem,25rem)] xl:items-start">
             <WaykeeperSidebar themeMode={themeMode} />
 
             <div className={routePanelClass}>
@@ -485,7 +485,7 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
 
   return (
     <aside
-      className={`hidden min-h-[calc(100svh-2rem)] rounded-[8px] border p-4 shadow-[0_24px_70px_rgba(2,8,32,0.16)] xl:flex xl:flex-col ${
+      className={`hidden min-h-[calc(100svh-2rem)] overflow-hidden rounded-[8px] border p-4 shadow-[0_24px_70px_rgba(2,8,32,0.16)] xl:flex xl:flex-col ${
         isLightTheme
           ? "border-[rgba(14,20,51,0.14)] bg-[rgba(255,252,244,0.92)] text-[color:var(--wk-ink)]"
           : "border-[rgba(255,247,214,0.14)] bg-[rgba(2,9,31,0.82)] text-white"
@@ -500,7 +500,7 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
         {navItems.map(([label, state], index) => (
           <button
             aria-disabled={state === "disabled" ? true : undefined}
-            className={`flex min-h-10 items-center gap-3 rounded-[4px] px-3 text-left text-sm font-medium normal-case tracking-normal transition ${
+            className={`flex min-h-10 w-full min-w-0 items-center gap-3 rounded-[4px] px-3 text-left text-sm font-medium normal-case tracking-normal transition ${
               state === "active"
                 ? isLightTheme
                   ? "bg-[color:var(--wk-cobalt)] text-white"
@@ -526,7 +526,7 @@ function WaykeeperSidebar({ themeMode }: { themeMode: WaykeeperThemeMode }) {
                 <span className="size-3 rounded-sm border border-current" />
               )}
             </span>
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
           </button>
         ))}
       </nav>
