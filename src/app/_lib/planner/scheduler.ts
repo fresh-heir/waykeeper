@@ -1698,7 +1698,19 @@ export function preserveExecutionHistoryOnRebuild(
 
 export function synchronizeDayPlanToCurrentTime(dayPlan: DayPlan, currentTime: string): DayPlan {
   const currentMs = new Date(currentTime).getTime();
-  let activeBlockId: string | undefined;
+  const activeBlocks = dayPlan.blocks.filter((block) => {
+    if (TERMINAL_STATUSES.has(block.status)) {
+      return false;
+    }
+
+    const startMs = new Date(block.startTime).getTime();
+    const endMs = new Date(block.endTime).getTime();
+
+    return startMs <= currentMs && currentMs < endMs;
+  });
+  const primaryActiveBlock = selectPrimaryActiveBlock(activeBlocks);
+  const activeBlockIds = new Set(activeBlocks.map((block) => block.id));
+  const activeBlockId = primaryActiveBlock?.id;
 
   const blocks = [...dayPlan.blocks]
     .sort(
@@ -1706,7 +1718,6 @@ export function synchronizeDayPlanToCurrentTime(dayPlan: DayPlan, currentTime: s
         new Date(left.startTime).getTime() - new Date(right.startTime).getTime()
     )
     .map((block) => {
-    const startMs = new Date(block.startTime).getTime();
     const endMs = new Date(block.endTime).getTime();
     let status = block.status;
 
@@ -1714,9 +1725,8 @@ export function synchronizeDayPlanToCurrentTime(dayPlan: DayPlan, currentTime: s
       return block;
     }
 
-    if (!activeBlockId && startMs <= currentMs && currentMs < endMs) {
+    if (activeBlockIds.has(block.id)) {
       status = "active";
-      activeBlockId = block.id;
     } else if (endMs <= currentMs) {
       status = "expired";
     } else {
@@ -1747,7 +1757,9 @@ export function deriveDayPlanExecutionSnapshot(
     currentTime
   );
   const currentScheduledBlock = hasRoute
-    ? synchronizedDayPlan.blocks.find((block) => block.status === "active") ?? null
+    ? selectPrimaryActiveBlock(
+        synchronizedDayPlan.blocks.filter((block) => block.status === "active")
+      )
     : null;
   const openTimeState = currentScheduledBlock
     ? null
@@ -2335,6 +2347,27 @@ function isBlockActiveAtTime(block: ScheduleBlock, currentTime: string) {
   const endMs = new Date(block.endTime).getTime();
 
   return startMs <= currentMs && currentMs < endMs;
+}
+
+function selectPrimaryActiveBlock(blocks: ScheduleBlock[]) {
+  if (blocks.length === 0) {
+    return null;
+  }
+
+  return [...blocks].sort((left, right) => {
+    const leftStartMs = new Date(left.startTime).getTime();
+    const leftEndMs = new Date(left.endTime).getTime();
+    const rightStartMs = new Date(right.startTime).getTime();
+    const rightEndMs = new Date(right.endTime).getTime();
+    const durationDelta =
+      leftEndMs - leftStartMs - (rightEndMs - rightStartMs);
+
+    if (durationDelta !== 0) {
+      return durationDelta;
+    }
+
+    return rightStartMs - leftStartMs;
+  })[0];
 }
 
 function findNextAvailableStart(

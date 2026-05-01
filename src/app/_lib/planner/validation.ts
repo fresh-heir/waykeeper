@@ -75,7 +75,10 @@ export function validateGeneratedDayPlan(
 
     const nextBlockStartMs = new Date(nextBlock.startTime).getTime();
 
-    if (blockEndMs > nextBlockStartMs) {
+    if (
+      blockEndMs > nextBlockStartMs &&
+      !isAllowedNestedFixedOverlap(block, nextBlock)
+    ) {
       warnings.push(`"${block.title}" overlaps "${nextBlock.title}".`);
     }
   });
@@ -172,7 +175,11 @@ export function validateFixedTimeTaskConstraint({
     const anchorStartMs = new Date(hardEvent.startTime).getTime();
     const anchorEndMs = new Date(hardEvent.endTime).getTime();
 
-    if (taskStartMs < anchorEndMs && anchorStartMs < taskEndMs) {
+    if (
+      taskStartMs < anchorEndMs &&
+      anchorStartMs < taskEndMs &&
+      !isContainedRange(taskStartMs, taskEndMs, anchorStartMs, anchorEndMs)
+    ) {
       warnings.push(
         `"${task.title}" overlaps the locked anchor "${hardEvent.title}".`
       );
@@ -191,7 +198,12 @@ export function validateFixedTimeTaskConstraint({
     const otherStartMs = new Date(otherTask.hardStartTime).getTime();
     const otherEndMs = new Date(otherTask.hardEndTime).getTime();
 
-    if (taskStartMs < otherEndMs && otherStartMs < taskEndMs) {
+    if (
+      taskStartMs < otherEndMs &&
+      otherStartMs < taskEndMs &&
+      !isContainedRange(taskStartMs, taskEndMs, otherStartMs, otherEndMs) &&
+      !isContainedRange(otherStartMs, otherEndMs, taskStartMs, taskEndMs)
+    ) {
       warnings.push(
         `"${task.title}" overlaps the fixed-time task "${otherTask.title}".`
       );
@@ -329,10 +341,50 @@ function validateHardEventPreservation(
     const blockStartMs = new Date(block.startTime).getTime();
     const blockEndMs = new Date(block.endTime).getTime();
 
-    if (blockStartMs < clampedEvent.endMs && clampedEvent.startMs < blockEndMs) {
+    if (
+      blockStartMs < clampedEvent.endMs &&
+      clampedEvent.startMs < blockEndMs &&
+      !(
+        block.locked &&
+        isContainedRange(
+          blockStartMs,
+          blockEndMs,
+          clampedEvent.startMs,
+          clampedEvent.endMs
+        )
+      )
+    ) {
       warnings.push(`"${block.title}" overlaps the locked anchor "${hardEvent.title}".`);
     }
   });
+}
+
+function isAllowedNestedFixedOverlap(
+  block: ScheduleBlock,
+  nextBlock: ScheduleBlock
+) {
+  if (!block.locked || !nextBlock.locked) {
+    return false;
+  }
+
+  const blockStartMs = new Date(block.startTime).getTime();
+  const blockEndMs = new Date(block.endTime).getTime();
+  const nextBlockStartMs = new Date(nextBlock.startTime).getTime();
+  const nextBlockEndMs = new Date(nextBlock.endTime).getTime();
+
+  return (
+    isContainedRange(blockStartMs, blockEndMs, nextBlockStartMs, nextBlockEndMs) ||
+    isContainedRange(nextBlockStartMs, nextBlockEndMs, blockStartMs, blockEndMs)
+  );
+}
+
+function isContainedRange(
+  innerStartMs: number,
+  innerEndMs: number,
+  outerStartMs: number,
+  outerEndMs: number
+) {
+  return outerStartMs <= innerStartMs && innerEndMs <= outerEndMs;
 }
 
 function validateFixedTimeTaskPlacement(
