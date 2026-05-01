@@ -56,14 +56,6 @@ export function WelcomeResumeScreen({
     <main className="waykeeper-welcome min-h-screen overflow-hidden p-4 text-[color:var(--wk-ink)] md:p-6">
       <section className="mx-auto grid min-h-[calc(100svh-2rem)] w-full max-w-[1560px] overflow-hidden rounded-[8px] border border-[rgba(255,247,214,0.2)] bg-[color:var(--wk-paper)] shadow-[0_34px_110px_rgba(2,8,32,0.42)] lg:grid-cols-[0.72fr_1fr]">
         <div className="relative z-10 flex min-h-[48rem] flex-col bg-[rgba(255,252,244,0.94)] px-7 py-6 md:px-10 lg:px-12">
-          <header className="flex items-start justify-end gap-4">
-            <div className="flex items-center gap-4 text-[0.75rem] text-[color:var(--wk-ink-muted)]">
-              <span>Settings</span>
-              <span aria-hidden="true">*</span>
-              <span aria-hidden="true">+</span>
-            </div>
-          </header>
-
           <div className="mt-14 max-w-[35rem] md:mt-20">
             <div className="flex items-center gap-5">
               <WaykeeperMark className="size-20 shrink-0 rounded-[22px] md:size-24" />
@@ -97,7 +89,11 @@ export function WelcomeResumeScreen({
 
             {hasResumePlan ? (
               <WaykeeperButton
-                leading={<BotanicalGlyph className="h-9 w-6" tone="jade" />}
+                leading={
+                  <span className="grid size-10 place-items-center rounded-full bg-white/22">
+                    <BotanicalGlyph className="h-8 w-6" tone="blue" />
+                  </span>
+                }
                 onClick={onResumePlan}
                 tone="jade"
                 trailing={<span className="text-xl">&gt;</span>}
@@ -124,9 +120,9 @@ export function WelcomeResumeScreen({
             </WaykeeperButton>
           </div>
 
-          <div className="mt-auto flex flex-wrap items-center gap-4 pt-10 text-[0.78rem] text-[color:var(--wk-ink-muted)]">
+          <div className="mt-auto flex flex-wrap items-center gap-3 pt-10 text-[0.78rem] text-[color:var(--wk-ink-muted)]">
             <button
-              className="normal-case tracking-normal transition hover:text-[color:var(--wk-cobalt)]"
+              className="rounded-full border border-[rgba(14,20,51,0.14)] bg-white/55 px-4 py-2 normal-case tracking-normal transition hover:border-[color:var(--wk-cobalt)] hover:text-[color:var(--wk-cobalt)]"
               onClick={onImportPlan}
               type="button"
             >
@@ -134,11 +130,19 @@ export function WelcomeResumeScreen({
             </button>
             <span aria-hidden="true" className="h-4 w-px bg-[rgba(14,20,51,0.2)]" />
             <button
-              className="normal-case tracking-normal transition hover:text-[color:var(--wk-cobalt)]"
+              className="rounded-full border border-[rgba(14,20,51,0.14)] bg-white/55 px-4 py-2 normal-case tracking-normal transition hover:border-[color:var(--wk-cobalt)] hover:text-[color:var(--wk-cobalt)]"
               onClick={() => setIsHowItWorksOpen(true)}
               type="button"
             >
               How it works
+            </button>
+            <span aria-hidden="true" className="h-4 w-px bg-[rgba(14,20,51,0.2)]" />
+            <button
+              aria-disabled="true"
+              className="rounded-full border border-[rgba(14,20,51,0.1)] bg-white/30 px-4 py-2 normal-case tracking-normal text-[color:var(--wk-ink-muted)] opacity-70"
+              type="button"
+            >
+              Settings later
             </button>
           </div>
         </div>

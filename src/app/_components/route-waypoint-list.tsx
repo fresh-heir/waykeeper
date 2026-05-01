@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import {
   Waymark,
@@ -296,8 +296,31 @@ function BlockCountdownTimer({
   startTime: string;
   themeMode: WaykeeperThemeMode;
 }) {
+  const [displayCurrentTime, setDisplayCurrentTime] = useState(currentTime);
+
+  useEffect(() => {
+    const resetId = window.setTimeout(() => {
+      setDisplayCurrentTime(currentTime);
+    }, 0);
+
+    const intervalId = window.setInterval(() => {
+      setDisplayCurrentTime((previousTime) => {
+        const previousMs = new Date(previousTime).getTime();
+
+        return Number.isFinite(previousMs)
+          ? new Date(previousMs + 1000).toISOString()
+          : currentTime;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(resetId);
+      window.clearInterval(intervalId);
+    };
+  }, [currentTime]);
+
   const snapshot = createBlockCountdownSnapshot({
-    currentTime,
+    currentTime: displayCurrentTime,
     endTime,
     startTime,
   });
@@ -308,10 +331,14 @@ function BlockCountdownTimer({
 
   const isLightTheme = themeMode === "light";
   const timerStyle = {
+    "--wk-timer-overflow-angle": `${snapshot.overflowAngle}deg`,
     "--wk-timer-angle": `${snapshot.remainingAngle}deg`,
     "--wk-timer-fill": isLightTheme
       ? "rgba(0, 127, 107, 0.88)"
       : "rgba(75, 224, 202, 0.82)",
+    "--wk-timer-overflow-fill": isLightTheme
+      ? "rgba(48, 48, 235, 0.72)"
+      : "rgba(219, 190, 255, 0.76)",
   } as CSSProperties;
 
   return (
@@ -332,8 +359,17 @@ function BlockCountdownTimer({
         }`}
         style={timerStyle}
       >
+        {snapshot.overflowMinutes > 0 ? (
+          <div
+            className="absolute inset-[8px] scale-x-[-1] rounded-full opacity-80"
+            style={{
+              background:
+                "conic-gradient(from -90deg, var(--wk-timer-overflow-fill) 0deg var(--wk-timer-overflow-angle), transparent var(--wk-timer-overflow-angle) 360deg)",
+            }}
+          />
+        ) : null}
         <div
-          className="absolute inset-[17px] rounded-full"
+          className="absolute inset-[17px] scale-x-[-1] rounded-full"
           style={{
             background:
               "conic-gradient(from -90deg, var(--wk-timer-fill) 0deg var(--wk-timer-angle), rgba(255,255,255,0.18) var(--wk-timer-angle) 360deg)",
@@ -354,7 +390,7 @@ function BlockCountdownTimer({
         <span
           className="absolute left-1/2 top-1/2 h-[2px] w-8 origin-left rounded-full bg-[color:var(--wk-coral)]"
           style={{
-            transform: `rotate(${snapshot.remainingAngle - 90}deg)`,
+            transform: `rotate(${-snapshot.remainingAngle - 90}deg)`,
           }}
         />
         {snapshot.labels.map((label) => (

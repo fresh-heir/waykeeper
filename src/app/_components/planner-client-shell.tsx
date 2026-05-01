@@ -4730,6 +4730,10 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
               removeFixedEvent(previousState, plannerContext, eventId)
             );
           }}
+          onSaveExit={() => {
+            clearReplanUi();
+            setEntryView("welcome_resume");
+          }}
           onSubmit={handleInterpret}
           onUseLocalNowForAi={handleUseLocalNowForAi}
           onUpdateFixedEvent={(eventId, field, value) => {

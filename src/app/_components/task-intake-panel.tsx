@@ -99,6 +99,7 @@ interface TaskIntakePanelProps {
   onProfilePriorityToggle: (priority: string) => void;
   onRawTextChange: (rawText: string) => void;
   onRemoveFixedEvent: (eventId: string) => void;
+  onSaveExit: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onUseLocalNowForAi: () => void;
   onUpdateFixedEvent: (
@@ -305,6 +306,7 @@ export function TaskIntakePanel({
   onProfilePriorityToggle,
   onRawTextChange,
   onRemoveFixedEvent,
+  onSaveExit,
   onSubmit,
   onUseLocalNowForAi,
   onUpdateFixedEvent,
@@ -334,6 +336,7 @@ export function TaskIntakePanel({
         onProfilePriorityToggle={onProfilePriorityToggle}
         onRawTextChange={onRawTextChange}
         onRemoveFixedEvent={onRemoveFixedEvent}
+        onSaveExit={onSaveExit}
         onSubmit={onSubmit}
         onUpdateFixedEvent={onUpdateFixedEvent}
         pendingFixedEventPreviews={pendingFixedEventPreviews}
@@ -822,6 +825,7 @@ function DaySetupConcept({
   onProfilePriorityToggle,
   onRawTextChange,
   onRemoveFixedEvent,
+  onSaveExit,
   onSubmit,
   onUpdateFixedEvent,
   pendingFixedEventPreviews,
@@ -850,6 +854,7 @@ function DaySetupConcept({
   onProfilePriorityToggle: (priority: string) => void;
   onRawTextChange: (rawText: string) => void;
   onRemoveFixedEvent: (eventId: string) => void;
+  onSaveExit: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onUpdateFixedEvent: (
     eventId: string,
@@ -866,6 +871,21 @@ function DaySetupConcept({
   const profileCardTitle = profileName
     ? `${profileName}'s Waykeeper Profile`
     : "Your Waykeeper Profile";
+  const setupSectionRefs = useRef<Array<HTMLElement | HTMLDivElement | null>>([]);
+  const setupSteps = [
+    ["1", "You", "Who you are"],
+    ["2", "Intentions", "What matters"],
+    ["3", "Rhythms", "Your patterns"],
+    ["4", "Preferences", "Style & tone"],
+    ["5", "Review", "Confirm & begin"],
+  ] as const;
+
+  function scrollToSetupSection(index: number) {
+    setupSectionRefs.current[index]?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 
   return (
     <section
@@ -874,31 +894,38 @@ function DaySetupConcept({
       className="overflow-hidden rounded-[8px] border border-[rgba(255,247,214,0.18)] bg-[color:var(--wk-paper)] shadow-[0_30px_90px_rgba(3,8,34,0.28)]"
     >
       <form className="grid min-h-[42rem] lg:grid-cols-[8.5rem_minmax(0,1fr)_18rem]" onSubmit={onSubmit} noValidate>
-        <aside className="relative hidden bg-[color:var(--wk-ink)] p-5 text-white lg:block">
-          <ol className="space-y-5 text-sm">
-            {[
-              ["1", "You", "Who you are"],
-              ["2", "Intentions", "What matters"],
-              ["3", "Rhythms", "Your patterns"],
-              ["4", "Preferences", "Style & tone"],
-              ["5", "Review", "Confirm & begin"],
-            ].map(([number, label, note], index) => (
-              <li className="flex gap-3" key={label}>
-                <span
-                  className={`grid size-6 shrink-0 place-items-center rounded-full border text-xs ${
-                    index === 0
-                      ? "border-[color:var(--wk-spectral-cyan)] bg-[color:var(--wk-spectral-cyan)] text-[color:var(--wk-ink)]"
-                      : "border-white/42 text-white/72"
-                  }`}
+        <aside className="relative hidden overflow-hidden bg-[color:var(--wk-ink)] p-5 text-white lg:block">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70">
+            <BotanicalGlyph className="absolute -left-7 top-20 h-36 w-24" tone="jade" />
+            <BotanicalGlyph className="absolute -right-10 top-64 h-44 w-28" tone="blue" />
+            <BotanicalGlyph className="absolute -left-5 bottom-36 h-40 w-24" tone="violet" />
+            <Starcut className="absolute left-5 top-10 size-7" />
+            <Starcut className="absolute bottom-52 right-5 size-6" />
+          </div>
+          <ol className="relative z-10 space-y-5 text-sm">
+            {setupSteps.map(([number, label, note], index) => (
+              <li key={label}>
+                <button
+                  className="flex w-full gap-3 rounded-[8px] text-left normal-case tracking-normal transition hover:bg-white/8"
+                  onClick={() => scrollToSetupSection(index)}
+                  type="button"
                 >
-                  {number}
-                </span>
-                <span>
-                  <span className="block font-semibold">{label}</span>
-                  <span className="block text-[0.67rem] leading-4 text-white/58">
-                    {note}
+                  <span
+                    className={`grid size-6 shrink-0 place-items-center rounded-full border text-xs ${
+                      index === 0
+                        ? "border-[color:var(--wk-spectral-cyan)] bg-[color:var(--wk-spectral-cyan)] text-[color:var(--wk-ink)]"
+                        : "border-white/42 text-white/72"
+                    }`}
+                  >
+                    {number}
                   </span>
-                </span>
+                  <span>
+                    <span className="block font-semibold">{label}</span>
+                    <span className="block text-[0.67rem] leading-4 text-white/58">
+                      {note}
+                    </span>
+                  </span>
+                </button>
               </li>
             ))}
           </ol>
@@ -910,7 +937,7 @@ function DaySetupConcept({
         </aside>
 
         <div className="space-y-6 p-6 md:p-8">
-          <div>
+          <div ref={(element) => { setupSectionRefs.current[0] = element; }}>
             <p className="text-[0.72rem] font-black uppercase tracking-[0.28em] text-[color:var(--wk-amethyst)]">
               Start with the real day
             </p>
@@ -976,8 +1003,8 @@ function DaySetupConcept({
             </div>
           </section>
 
-          <section>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--wk-ink-muted)]">
+          <section ref={(element) => { setupSectionRefs.current[1] = element; }}>
+            <p className="text-[0.86rem] font-black uppercase tracking-[0.24em] text-[color:var(--wk-cobalt)]">
               What should this route protect? Choose up to 3.
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
@@ -1009,8 +1036,8 @@ function DaySetupConcept({
             </div>
           </section>
 
-          <section>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--wk-ink-muted)]">
+          <section ref={(element) => { setupSectionRefs.current[2] = element; }}>
+            <p className="text-[0.86rem] font-black uppercase tracking-[0.24em] text-[color:var(--wk-cobalt)]">
               What rhythm fits today?
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
@@ -1041,7 +1068,10 @@ function DaySetupConcept({
             </div>
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <section
+            className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]"
+            ref={(element) => { setupSectionRefs.current[3] = element; }}
+          >
             <div className="rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-white/70 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <SectionHeading
@@ -1227,7 +1257,10 @@ function DaySetupConcept({
             </div>
           </section>
 
-          <section className="rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-white/70 p-4">
+          <section
+            className="rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-white/70 p-4"
+            ref={(element) => { setupSectionRefs.current[4] = element; }}
+          >
             <div className="flex items-start justify-between gap-3">
               <SectionHeading
                 label="Fixed anchors"
@@ -1254,13 +1287,18 @@ function DaySetupConcept({
           </section>
 
           <div className="flex flex-col gap-3 border-t border-[rgba(14,20,51,0.12)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <button className="normal-case tracking-normal text-[color:var(--wk-ink)]" type="button">
+            <button
+              className="rounded-[10px] border border-[rgba(14,20,51,0.18)] bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[color:var(--wk-ink)] shadow-[0_12px_30px_rgba(3,8,34,0.08)] transition hover:border-[color:var(--wk-cobalt)] hover:text-[color:var(--wk-cobalt)]"
+              onClick={onSaveExit}
+              type="button"
+            >
               Save & exit
             </button>
             <WaykeeperButton
               aria-label={draft.inputMode === "csv" ? "Import CSV" : "Interpret tasks"}
               className="sm:min-w-44"
               tone="jade"
+              trailing={<Starcut className="size-6" />}
               type="submit"
             >
               {draft.inputMode === "csv" ? "Import CSV" : "Continue"}
@@ -1268,9 +1306,14 @@ function DaySetupConcept({
           </div>
         </div>
 
-        <aside className="hidden border-l border-[rgba(14,20,51,0.1)] bg-[rgba(255,252,244,0.7)] p-5 xl:block">
+        <aside className="relative hidden overflow-hidden border-l border-[rgba(14,20,51,0.1)] bg-[rgba(255,252,244,0.7)] p-5 xl:block">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70">
+            <BotanicalGlyph className="absolute -right-8 top-16 h-44 w-28" tone="blue" />
+            <BotanicalGlyph className="absolute -left-5 bottom-28 h-44 w-28" tone="jade" />
+            <Starcut className="absolute right-8 top-80 size-8" />
+          </div>
           <div
-            className="rounded-[8px] border border-[rgba(14,20,51,0.1)] bg-white/78 p-4"
+            className="relative z-10 rounded-[8px] border border-[rgba(14,20,51,0.1)] bg-white/78 p-4"
             data-testid="waykeeper-profile-summary"
           >
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--wk-ink-muted)]">
@@ -1304,7 +1347,7 @@ function DaySetupConcept({
             ) : null}
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-[color:var(--wk-ink)]">
+          <div className="relative z-10 mt-5 overflow-hidden rounded-[8px] border border-[rgba(14,20,51,0.12)] bg-[color:var(--wk-ink)]">
             <GeneratedWaykeeperAsset
               {...waykeeperAssets.sampleDayHero}
               className="h-52 w-full"
@@ -2272,7 +2315,7 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-stone-500">
+      <h3 className="text-[0.86rem] font-black uppercase tracking-[0.22em] text-[color:var(--wk-cobalt)]">
         {label}
       </h3>
       <p className="mt-1 text-xs leading-5 text-stone-500">{note}</p>

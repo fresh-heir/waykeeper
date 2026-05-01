@@ -4685,10 +4685,10 @@ assert.deepEqual(
   activeCountdown.labels.slice(0, 3),
   [
     { angle: 0, label: "0" },
-    { angle: 36, label: "45" },
-    { angle: 72, label: "40" },
+    { angle: -36, label: "5" },
+    { angle: -72, label: "10" },
   ],
-  "active countdown should place 0 at noon and step down from max minus five clockwise"
+  "active countdown should place 0 at noon and step up in 5-minute increments counter-clockwise"
 );
 
 const completedCountdown = createBlockCountdownSnapshot({
@@ -4713,13 +4713,23 @@ const longCountdown = createBlockCountdownSnapshot({
 assert(longCountdown, "long countdown should render a snapshot");
 assert.equal(
   longCountdown.labelStepMinutes,
-  15,
-  "long countdown should reduce label density over 60 minutes"
+  5,
+  "long countdown should keep 5-minute face labels"
+);
+assert.equal(
+  longCountdown.labelMaxMinutes,
+  60,
+  "long countdown should cap the outer face at 60 minutes"
+);
+assert.equal(
+  longCountdown.overflowMinutes,
+  45,
+  "long countdown should expose overflow minutes for the inner overflow field"
 );
 assert.deepEqual(
-  buildCountdownLabels(75, 15).map((label) => label.label),
-  ["0", "60", "45", "30", "15"],
-  "long countdown labels should stay scan-friendly"
+  buildCountdownLabels(60, 5).slice(0, 4).map((label) => label.label),
+  ["0", "5", "10", "15"],
+  "long countdown labels should stay in 5-minute increments"
 );
 
 console.log("Planner regression checks passed.");
