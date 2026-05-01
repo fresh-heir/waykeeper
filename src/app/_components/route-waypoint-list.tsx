@@ -331,8 +331,8 @@ function BlockCountdownTimer({
 
   const isLightTheme = themeMode === "light";
   const timerStyle = {
-    "--wk-timer-overflow-angle": `${snapshot.overflowAngle}deg`,
-    "--wk-timer-angle": `${snapshot.remainingAngle}deg`,
+    "--wk-timer-overflow-angle": `${snapshot.overflowElapsedAngle}deg`,
+    "--wk-timer-angle": `${snapshot.elapsedAngle}deg`,
     "--wk-timer-fill": isLightTheme
       ? "rgba(0, 127, 107, 0.88)"
       : "rgba(75, 224, 202, 0.82)",
@@ -390,7 +390,7 @@ function BlockCountdownTimer({
         <span
           className="absolute left-1/2 top-1/2 h-[2px] w-8 origin-left rounded-full bg-[color:var(--wk-coral)]"
           style={{
-            transform: `rotate(${-snapshot.remainingAngle - 90}deg)`,
+            transform: `rotate(${-snapshot.elapsedAngle - 90}deg)`,
           }}
         />
         {snapshot.labels.map((label) => (
@@ -428,7 +428,7 @@ function BlockCountdownTimer({
             isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
           }`}
         >
-          The colored field shrinks toward 0 at the top as this waypoint runs down.
+          The colored field fills counterclockwise from 0 as this waypoint runs.
         </p>
       </div>
     </div>

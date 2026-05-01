@@ -10,13 +10,13 @@ export interface BlockCountdownSnapshot {
   durationLabel: string;
   durationMs: number;
   dialMaxMinutes: number;
+  elapsedAngle: number;
   elapsedMs: number;
   labelMaxMinutes: number;
   labelStepMinutes: number;
   labels: CountdownLabel[];
-  overflowAngle: number;
+  overflowElapsedAngle: number;
   overflowMinutes: number;
-  remainingAngle: number;
   remainingLabel: string;
   remainingMs: number;
   remainingRatio: number;
@@ -55,26 +55,26 @@ export function createBlockCountdownSnapshot(input: {
   );
   const dialMaxMinutes = labelMaxMinutes;
   const labelStepMinutes = 5;
-  const remainingMinutes = remainingMs / MINUTE_MS;
+  const elapsedMinutes = elapsedMs / MINUTE_MS;
   const overflowMinutes = Math.max(0, durationMinutes - dialMaxMinutes);
-  const overflowRemainingMinutes =
+  const overflowElapsedMinutes =
     overflowMinutes > 0
-      ? clamp(remainingMinutes - dialMaxMinutes, 0, overflowMinutes)
+      ? clamp(elapsedMinutes - dialMaxMinutes, 0, overflowMinutes)
       : 0;
 
   return {
     durationLabel: formatDuration(durationMs, { includeSeconds: false }),
     dialMaxMinutes,
     durationMs,
+    elapsedAngle:
+      (Math.min(elapsedMinutes, dialMaxMinutes) / dialMaxMinutes) * 360,
     elapsedMs,
     labelMaxMinutes,
     labelStepMinutes,
     labels: buildCountdownLabels(labelMaxMinutes, labelStepMinutes),
-    overflowAngle:
-      overflowMinutes > 0 ? (overflowRemainingMinutes / overflowMinutes) * 360 : 0,
+    overflowElapsedAngle:
+      overflowMinutes > 0 ? (overflowElapsedMinutes / overflowMinutes) * 360 : 0,
     overflowMinutes,
-    remainingAngle:
-      (Math.min(remainingMinutes, dialMaxMinutes) / dialMaxMinutes) * 360,
     remainingLabel: formatDuration(remainingMs, { includeSeconds: true }),
     remainingMs,
     remainingRatio,
@@ -91,7 +91,7 @@ export function buildCountdownLabels(
 
   const labels: CountdownLabel[] = [{ angle: 0, label: "0" }];
 
-  for (let value = stepMinutes; value <= maxMinutes; value += stepMinutes) {
+  for (let value = stepMinutes; value < maxMinutes; value += stepMinutes) {
     labels.push({
       angle: -(value / maxMinutes) * 360,
       label: String(value),

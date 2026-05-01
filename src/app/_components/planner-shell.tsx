@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { DayTimeline } from "@/app/_components/day-timeline";
 import { RouteWaypointList } from "@/app/_components/route-waypoint-list";
@@ -578,10 +579,17 @@ function FloatingViewMenu({
   themeMode: WaykeeperThemeMode;
 }) {
   const [isPlansOpen, setIsPlansOpen] = useState(false);
+  const portalRoot =
+    typeof document === "undefined" ? null : document.body;
   const isLightTheme = themeMode === "light";
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2">
+  if (!portalRoot) {
+    return null;
+  }
+
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[70] flex justify-center px-4">
+      <div className="pointer-events-auto flex max-w-[calc(100vw-2rem)] flex-col items-center gap-2">
       {isPlansOpen ? (
         <section
           aria-label="Saved plans"
@@ -740,7 +748,9 @@ function FloatingViewMenu({
           Home
         </button>
       </nav>
-    </div>
+      </div>
+    </div>,
+    portalRoot
   );
 }
 
