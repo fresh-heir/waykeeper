@@ -1,7 +1,7 @@
 # 13 · Submission Redesign Workspace
 
 This is the active working document for the Handshake/OpenAI Codex Creator Challenge submission push.
-It is meant to stay live, iterative, and current through the April 30, 2026 deadline.
+It is meant to stay live, iterative, and current through the April 30, 2026 submission push and final post-submission polish.
 
 Use this file as the single workspace for:
 - current redesign direction
@@ -33,7 +33,7 @@ Working rules for this document:
 
 ## Current state snapshot
 
-Product read as of 2026-04-23:
+Product read as of 2026-05-01:
 - the planner spine is already real: intake, interpretation/review, route generation, Oracle, replan, carry-forward, persistence, and AI refinement all exist in the current app
 - the main risk has shifted from missing planner capability to screen-level visual QA, polish, and challenge-facing flow confidence
 - a `welcome_resume` entry layer now exists before the planner, with start, resume, and sample-day paths
@@ -53,8 +53,11 @@ Product read as of 2026-04-23:
   Chromium launches, the redesigned shell compatibility pass is complete, and the full non-real-AI QA suite is green
 - final packaging pass is now submission-ready locally:
   production build uses the documented Webpack build path for stable `next start`, final screenshots are captured under `docs/submission/screenshots/`, and submission copy is written at `docs/submission/submission-copy.md`
-- deployment remains the only external blocker:
-  this repo currently has no configured git remote or detected Vercel/Netlify CLI/project metadata, so production deployment needs a target connection before final smoke/submission
+- GitHub and production deployment are now connected:
+  the repo is pushed to `https://github.com/fresh-heir/waykeeper`, and the production app is live at `https://waykeeper.vercel.app`
+- post-submission polish added persistent multi-plan drafts, live timezone-sensitive welcome/date settings, nested fixed-anchor handling, vertical profile art, contained route sidebar navigation, and a fixed viewport bottom navigation
+- active countdown now fills counterclockwise from 0 using elapsed time, with label collision removed
+- this workspace is no longer the daily execution tracker for submission; future work should move into a post-submission polish tracker or GitHub issues
 
 Current verification read:
 - `npm run lint` passed on 2026-04-22
@@ -85,11 +88,13 @@ Current verification read:
   71 passed, 3 real-AI smoke tests intentionally skipped
 - manual production smoke passed on 2026-04-29:
   normal welcome first, dev tools hidden, How It Works modal opens, Working Professional sample builds, active countdown appears, Share route variants are present, Light/Dark toggle works, and Start today's plan reaches guided intake
+- `npm run lint` passed on 2026-05-01 after the floating route nav and countdown-fill patch
 
 Workspace upkeep:
-- active daily thread-heartbeat automation created on 2026-04-22
+- daily thread-heartbeat automation created on 2026-04-22
 - default cadence: 10:00 AM America/Anchorage
 - update rule: only edit this workspace when there is material progress, a changed decision, stale status content, or missing change-log coverage
+- retired on 2026-05-01 after the April 30 submission phase and production deployment were complete
 
 ## North star for this phase
 
@@ -120,7 +125,7 @@ Core product stance for this redesign:
 | Phase 0 · Moodboard workspace | Done | Collect hybrid inputs, synthesize visual direction, and lock one art direction. | Moodboard inputs are filled, visual synthesis is documented, and one direction is chosen for implementation. |
 | Phase 1 · First-run and product framing | Done | Redesign welcome/resume flow, sample-day experience, and remove debug-first impression. | Cold start direction is implemented and challenge-facing first impression is product-first. |
 | Phase 2 · Core aesthetic revamp | Done | Apply the chosen visual system to setup, route, timeline, and Oracle. | The main planner surfaces share one coherent aesthetic and hierarchy system. |
-| Phase 3 · Submission readiness | In progress | Tighten desktop QA, mobile safety, demo honesty, and challenge-facing presentation. | The build is polished enough to demo, deploy, and describe in Handshake AI Showcase fields. |
+| Phase 3 · Submission readiness | Done | Tighten desktop QA, mobile safety, demo honesty, and challenge-facing presentation. | Production URL, GitHub remote, screenshots/copy, launch helpers, and final smoke notes are in place. |
 
 ## Decision log
 
@@ -194,6 +199,13 @@ Core product stance for this redesign:
   welcome hero, How It Works modal, sample persona preview, light route with countdown + Oracle, Share route daily brief, and optional dark route.
 - 2026-04-29: Submission copy is locked in `docs/submission/submission-copy.md` with the tagline:
   `Paste the day's mess in. Get back a livable route through it.`
+- 2026-05-01: GitHub and Vercel are now the submission packaging path:
+  source at `https://github.com/fresh-heir/waykeeper`, production at `https://waykeeper.vercel.app`.
+- 2026-05-01: Multiple local plan drafts can persist at once, reload from the floating route menu, and remain until explicitly deleted.
+- 2026-05-01: Welcome date/time should be live and timezone-sensitive unless the user is resuming a saved route.
+- 2026-05-01: The active countdown should fill counterclockwise from 0 using elapsed time; remaining time remains the readable text headline.
+- 2026-05-01: Bottom route navigation should behave like a viewport HUD via portal, not like page content.
+- 2026-05-01: The daily workspace heartbeat is retired after the submission deadline and deploy packaging.
 
 ## Moodboard inputs
 
@@ -598,12 +610,10 @@ Current recommendation:
 
 ## Open questions
 
-- How much more color density should the implemented route and setup screens receive before they stop feeling practical?
-- Should the welcome/resume set piece become the primary challenge screenshot, or should the route + Oracle desktop shell lead the submission?
-- Are the generated PNGs acceptable as-is for submission load size, or should they be optimized before final deploy?
-- Does light mode now carry enough Waykeeper atmosphere, or should it receive one more subtle botanical/path accent before final screenshots?
-- Does the daily brief need a second pass on tone after manual copy/paste testing with a real route?
-- Which deploy target should host the final production URL, since no remote/project metadata is currently configured in this local checkout?
+- Should post-submission work move into GitHub issues, a new roadmap doc, or both?
+- Should generated assets be optimized after submission if Vercel performance data shows a real load-size issue?
+- Should persistent drafts become a full named-plan library later, or stay as lightweight local recovery?
+- Should profile choices eventually influence scheduling heuristics, or remain visible context and export metadata only?
 
 ## What we've done
 
@@ -699,10 +709,18 @@ Current recommendation:
 - Created `docs/submission/submission-copy.md` with title, tagline, descriptions, AI usage, demo instructions, screenshot order, and final local QA notes.
 - Confirmed normal submission UX manually:
   welcome first, dev tools hidden, How It Works modal, Working Professional sample route, active countdown, Share route variants, theme toggle, and fresh Start today's plan intake.
+- Connected the project to GitHub and pushed the submission repo to `https://github.com/fresh-heir/waykeeper`.
+- Deployed the production app to `https://waykeeper.vercel.app`.
+- Added live timezone/date settings for welcome and route date display.
+- Added persistent multi-plan drafts with load/delete affordances in the floating bottom route menu.
+- Fixed Waykeeper mark layering, contained the route sidebar navigation, and replaced the small profile art with a taller vertical set piece.
+- Allowed nested fixed anchors, such as a 9-5 clinic block with a 12-1 lunch meeting inside it, without splitting the long anchor.
+- Added launch helper assets and submission image files for GitHub/Vercel handoff.
+- Fixed the bottom route menu to render as a viewport HUD and corrected the active countdown so it fills counterclockwise from 0 using elapsed time.
 
 ## Next up
 
-- Connect a deploy target, deploy production with normal submission env, smoke the deployed URL, then submit using `docs/submission/submission-copy.md` and the screenshots in `docs/submission/screenshots/`.
+- If work continues after submission, open a post-submission polish tracker and triage remaining UX ideas into bugs versus enhancements.
 
 ## Change log
 
@@ -733,3 +751,4 @@ Current recommendation:
 - 2026-04-28: Unblocked Chromium e2e execution under full local access, updated redesigned-shell compatibility coverage, and verified `npm run test:e2e:qa` with 70 passing tests and 3 intentional skips.
 - 2026-04-28: Added active-route countdown timer planning/implementation notes and live-real-day time-mode decision.
 - 2026-04-29: Froze feature scope, switched production build to Webpack for stable packaging, captured final screenshots, wrote submission copy, and verified lint, planner regression, production build, e2e QA, and manual production smoke.
+- 2026-05-01: Recorded GitHub/Vercel production state, persistent drafts, live timezone/date settings, nested fixed-anchor handling, launch helpers, and final floating-nav/countdown polish; retired the daily workspace heartbeat.
