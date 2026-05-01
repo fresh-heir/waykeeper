@@ -3682,17 +3682,17 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
     clearEphemeralUiState();
     clearAcceptedAiSessions();
 
-    const nextPlannerRuntime = createRuntimePlanner(planner);
+    const nextPlannerRuntime = createLiveRuntimePlanner(planner);
     const nextContext = getPlannerStoreContext(nextPlannerRuntime);
     const nextState = setDaySetupInputMode(
-      createPlannerStoreState(planner),
+      createPlannerStoreState(nextPlannerRuntime),
       nextContext,
       "csv"
     );
 
     startTransition(() => {
       setPlannerRuntime(nextPlannerRuntime);
-      setPlannerTimeMode("manual");
+      setPlannerTimeMode("live");
       setState(nextState);
       setAiDiagnostics({});
       setDevEngineSettings(loadPlannerDevEngineSettings());
@@ -4390,7 +4390,13 @@ export function PlannerClientShell({ planner }: PlannerClientShellProps) {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).format(new Date(plannerView.dayPlan.planningWindow.startTime));
+  }).format(
+    new Date(
+      routeExists
+        ? plannerView.dayPlan.planningWindow.startTime
+        : formatLocalIsoDateTime()
+    )
+  );
 
   if (!hasHydrated) {
     return (

@@ -2615,7 +2615,7 @@ test("AI interpretation failures preserve editable setup and keep diagnostics vi
   await page.getByRole("button", { name: "Interpret tasks" }).click();
 
   await expect(
-    page.getByRole("heading", { name: "Let's get to know your day." })
+    page.getByRole("heading", { name: "What needs to fit today?" })
   ).toBeVisible();
   await expect(getBrainDumpEditor(page)).toContainText("email clinic 15m");
   await expect(getDiagnosticsPanel(page, "Interpretation diagnostics")).toContainText(
