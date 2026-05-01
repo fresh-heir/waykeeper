@@ -90,13 +90,109 @@ export function interpretDaySetup({
   });
 
   return {
-    tasks,
+    tasks: applyProfileHintsToTasks(tasks, draft),
     hardEvents: [...manualHardEvents, ...inferredHardEvents].sort(
       (left, right) =>
         new Date(left.startTime).getTime() - new Date(right.startTime).getTime()
     ),
     warnings,
   };
+}
+
+function applyProfileHintsToTasks(tasks: Task[], draft: DaySetupDraft) {
+  const priorities = new Set(draft.profilePriorities);
+  const rhythm = draft.profileRhythm;
+
+  return tasks.map((task, index) => {
+    let nextTask = task;
+    const normalizedTitle = task.title.toLowerCase();
+
+    if (priorities.has("focus") && task.type === "deep_work") {
+      nextTask = withPriorityAtLeast(nextTask, "high");
+    }
+
+    if (
+      priorities.has("learning") &&
+      /\b(study|read|reading|review|practice|problem set|homework|class|lecture|research)\b/.test(normalizedTitle)
+    ) {
+      nextTask = withPriorityAtLeast(nextTask, "high");
+    }
+
+    if (
+      priorities.has("creativity") &&
+      /\b(write|draft|design|create|record|sketch|polish|outline|launch|idea|demo|copy)\b/.test(normalizedTitle)
+    ) {
+      nextTask = withPriorityAtLeast(nextTask, "high");
+    }
+
+    if (
+      priorities.has("health") &&
+      (task.type === "self_care" ||
+        task.type === "break_candidate" ||
+        /\b(walk|gym|exercise|meal|lunch|dinner|eat|sleep|rest|prescription|meds|therapy)\b/.test(normalizedTitle))
+    ) {
+      nextTask = {
+        ...withPriorityAtLeast(nextTask, "medium"),
+        mustDoToday: true,
+        deferrable: false,
+      };
+    }
+
+    if (
+      priorities.has("relationships") &&
+      /\b(call|text|email|reply|respond|message|meet|check in|follow up|follow-up|sam|mom|dad|friend|client)\b/.test(normalizedTitle)
+    ) {
+      nextTask = withPriorityAtLeast(nextTask, "medium");
+    }
+
+    if (priorities.has("purpose") && (task.mustDoToday || index === 0)) {
+      nextTask = withPriorityAtLeast(nextTask, "high");
+    }
+
+    if (rhythm === "morning_focus" && task.type === "deep_work") {
+      nextTask = withPriorityAtLeast(nextTask, "high");
+    }
+
+    if (
+      rhythm === "meeting_weave" &&
+      /\b(meeting|call|email|reply|follow up|follow-up|agenda|notes)\b/.test(normalizedTitle)
+    ) {
+      nextTask = withPriorityAtLeast(nextTask, "medium");
+    }
+
+    if (
+      rhythm === "evening_closer" &&
+      /\b(wrap|close|plan tomorrow|tomorrow|pack|tidy|reset|send)\b/.test(normalizedTitle)
+    ) {
+      nextTask = withPriorityAtLeast(nextTask, "medium");
+    }
+
+    return nextTask;
+  });
+}
+
+function withPriorityAtLeast(task: Task, minimumPriority: Priority): Task {
+  if (getPriorityRank(task.priority) >= getPriorityRank(minimumPriority)) {
+    return task;
+  }
+
+  return {
+    ...task,
+    priority: minimumPriority,
+  };
+}
+
+function getPriorityRank(priority: Priority) {
+  switch (priority) {
+    case "critical":
+      return 4;
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+  }
 }
 
 function normalizeRawLines(rawText: string) {

@@ -68,10 +68,10 @@ export function WelcomeResumeScreen({
             <div className="flex items-center gap-5">
               <WaykeeperMark className="size-20 shrink-0 rounded-[22px] md:size-24" />
               <div>
-                <h1 className="font-display text-[clamp(3.5rem,7.4vw,6.4rem)] font-semibold leading-[0.82] tracking-[-0.08em] text-[color:var(--wk-ink)]">
+                <h1 className="font-display text-[clamp(3.5rem,7.4vw,6.4rem)] font-semibold leading-[0.88] tracking-[-0.08em] text-[color:var(--wk-ink)]">
                   Waykeeper
                 </h1>
-                <p className="mt-3 text-[0.86rem] font-black uppercase tracking-[0.24em] text-[color:var(--wk-ink-muted)]">
+                <p className="mt-5 text-[0.86rem] font-black uppercase tracking-[0.24em] text-[color:var(--wk-ink-muted)]">
                   {currentDateLabel}
                 </p>
               </div>

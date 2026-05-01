@@ -31,6 +31,8 @@ import {
   inferTaskRouteFlowContext,
 } from "@/app/_lib/planner/route-flow";
 
+const FIVE_MINUTE_MS = 5 * 60 * 1000;
+
 interface GenerateDraftScheduleInput {
   breakCadence: BreakCadence;
   breakMode: BreakMode;
@@ -2602,20 +2604,26 @@ function buildAvailableSlots(
   [...anchors]
     .sort((left, right) => left.startMs - right.startMs)
     .forEach((anchor) => {
-    if (anchor.startMs > cursorMs) {
+    const slotStartMs = ceilToFiveMinuteMs(cursorMs);
+    const slotEndMs = floorToFiveMinuteMs(anchor.startMs);
+
+    if (slotEndMs > slotStartMs) {
       slots.push({
-        startMs: cursorMs,
-        endMs: anchor.startMs,
+        startMs: slotStartMs,
+        endMs: slotEndMs,
       });
     }
 
     cursorMs = Math.max(cursorMs, anchor.endMs);
     });
 
-  if (cursorMs < windowEndMs) {
+  const slotStartMs = ceilToFiveMinuteMs(cursorMs);
+  const slotEndMs = floorToFiveMinuteMs(windowEndMs);
+
+  if (slotEndMs > slotStartMs) {
     slots.push({
-      startMs: cursorMs,
-      endMs: windowEndMs,
+      startMs: slotStartMs,
+      endMs: slotEndMs,
     });
   }
 
@@ -2748,13 +2756,14 @@ function allocateEvenGapMinutes(
     return gapMinutesByBlockIndex;
   }
 
-  const baseGapMinutes = Math.floor(totalMinutes / targetIndices.length);
-  let remainderMinutes = totalMinutes % targetIndices.length;
+  const fiveMinuteUnits = Math.floor(totalMinutes / 5);
+  const baseGapUnits = Math.floor(fiveMinuteUnits / targetIndices.length);
+  let remainderUnits = fiveMinuteUnits % targetIndices.length;
 
   targetIndices.forEach((blockIndex) => {
-    const extraMinute = remainderMinutes > 0 ? 1 : 0;
-    gapMinutesByBlockIndex.set(blockIndex, baseGapMinutes + extraMinute);
-    remainderMinutes = Math.max(0, remainderMinutes - 1);
+    const extraUnit = remainderUnits > 0 ? 1 : 0;
+    gapMinutesByBlockIndex.set(blockIndex, (baseGapUnits + extraUnit) * 5);
+    remainderUnits = Math.max(0, remainderUnits - 1);
   });
 
   return gapMinutesByBlockIndex;
@@ -3575,4 +3584,12 @@ function priorityRank(priority: Priority) {
 
 function diffMinutes(startMs: number, endMs: number) {
   return Math.round((endMs - startMs) / 60000);
+}
+
+function ceilToFiveMinuteMs(value: number) {
+  return Math.ceil(value / FIVE_MINUTE_MS) * FIVE_MINUTE_MS;
+}
+
+function floorToFiveMinuteMs(value: number) {
+  return Math.floor(value / FIVE_MINUTE_MS) * FIVE_MINUTE_MS;
 }

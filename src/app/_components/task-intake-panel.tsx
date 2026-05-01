@@ -918,8 +918,9 @@ function DaySetupConcept({
               What needs to fit today?
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--wk-ink-muted)]">
-              Add tasks, fixed events, and the hours you actually have. The
-              profile stays on this device and only shapes the summary copy.
+              Add tasks, fixed events, and the hours you actually have. Profile
+              choices softly guide task priority and the daily brief; fixed times
+              and availability still stay in charge.
             </p>
           </div>
 
@@ -966,7 +967,7 @@ function DaySetupConcept({
                     type="button"
                   >
                     <span className="block">{option.label}</span>
-                    <span className="mt-1 block text-[0.68rem] font-normal leading-4 opacity-75">
+                    <span className="mt-1 block text-[0.68rem] font-normal normal-case leading-4 tracking-normal opacity-75">
                       {option.helper}
                     </span>
                   </button>
@@ -980,8 +981,7 @@ function DaySetupConcept({
               What should this route protect? Choose up to 3.
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-              These appear in the review and daily brief. They do not change
-              the scheduler.
+              These softly guide task priority, the review, and the daily brief.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {profilePriorityOptions.map((option) => {
@@ -1000,7 +1000,7 @@ function DaySetupConcept({
                     type="button"
                   >
                     <span className="block">{option.label}</span>
-                    <span className="mt-1 block text-[0.68rem] font-normal leading-4 opacity-75">
+                    <span className="mt-1 block text-[0.68rem] font-normal normal-case leading-4 tracking-normal opacity-75">
                       {option.helper}
                     </span>
                   </button>
@@ -1014,8 +1014,8 @@ function DaySetupConcept({
               What rhythm fits today?
             </p>
             <p className="mt-1 text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-              This helps describe the route. Scheduling still comes from the
-              times, breaks, fixed events, and tasks below.
+              This softly guides the route shape. Times, breaks, fixed events,
+              and tasks still stay in charge.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {profileRhythmOptions.map((option) => (
@@ -1033,7 +1033,7 @@ function DaySetupConcept({
                   type="button"
                 >
                   <span className="block">{option.label}</span>
-                  <span className="mt-1 block text-[0.68rem] font-normal leading-4 opacity-75">
+                  <span className="mt-1 block text-[0.68rem] font-normal normal-case leading-4 tracking-normal opacity-75">
                     {option.helper}
                   </span>
                 </button>
@@ -1210,8 +1210,8 @@ function DaySetupConcept({
                     What should the route feel like?
                   </span>
                   <span className="block text-xs leading-5 text-[color:var(--wk-ink-muted)]">
-                    This appears in the profile and daily brief. It does not
-                    override the scheduler.
+                    This appears in the profile and daily brief and gives the
+                    planner soft context.
                   </span>
                   <textarea
                     className="min-h-20 w-full resize-y rounded-[6px] border border-[rgba(14,20,51,0.16)] bg-white px-3 py-2 text-sm outline-none focus:border-[color:var(--wk-cobalt)]"
@@ -1231,7 +1231,7 @@ function DaySetupConcept({
             <div className="flex items-start justify-between gap-3">
               <SectionHeading
                 label="Fixed anchors"
-                note="Keep only the commitments that cannot move."
+                note="Add the commitments that cannot move."
               />
               <button
                 className="rounded-[8px] border border-[rgba(14,20,51,0.18)] bg-white px-3 py-2 text-xs font-semibold normal-case tracking-normal text-[color:var(--wk-ink)] transition hover:border-[color:var(--wk-cobalt)]"
