@@ -1865,7 +1865,7 @@ function deriveRouteMessaging({
       [
         ...(draftScheduleResponse.carryForwardItems.length > 0
           ? [
-              "Not everything fit inside this planning window, so overflow was carried forward explicitly.",
+              "Not everything fit inside this planning window, so deferred tasks were carried forward explicitly.",
             ]
           : []),
         ...draftScheduleResponse.dueWarnings.map((warning) => warning.message),
@@ -1966,7 +1966,7 @@ function buildFallbackOracleAdvice({
 
   if (carryForwardItems.length > 0 || unplacedTasks.length > 0) {
     return [
-      "Overflow is already explicit. Protect the placed route first and let carried work wait unless today's priorities change.",
+      "Deferred work is already explicit. Protect the placed route first and let carried work wait unless today's priorities change.",
     ];
   }
 

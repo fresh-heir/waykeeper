@@ -66,9 +66,9 @@ const scheduleStatusLabels: Partial<Record<ScheduleBlock["status"], string>> = {
 const carryForwardReasonLabels: Record<CarryForwardItem["carryForwardReason"], string> =
   {
     manual: "Manual carry forward",
-    overflow: "Overflow",
-    replan_overflow: "Replan overflow",
-    unplaced: "Unplaced work",
+    overflow: "Deferred by capacity",
+    replan_overflow: "Deferred during replan",
+    unplaced: "Deferred work",
   };
 
 const unplacedReasonLabels: Record<UnplacedTask["reason"], string> = {
@@ -277,10 +277,10 @@ function buildOverflowSection(source: PlannerExportSource) {
   ];
 
   if (lines.length === 0) {
-    return "Overflow / carry-forward\n- No overflow is currently carried forward.";
+    return "Deferred tasks / carry-forward\n- No deferred tasks are currently carried forward.";
   }
 
-  return ["Overflow / carry-forward", ...dedupeStrings(lines)].join("\n");
+  return ["Deferred tasks / carry-forward", ...dedupeStrings(lines)].join("\n");
 }
 
 function buildHowToUseSection(source: PlannerExportSource) {
@@ -333,7 +333,7 @@ function buildUnplacedSection(unplacedTasks: UnplacedTask[]) {
   }
 
   return [
-    "Unplaced today",
+    "Deferred today",
     ...unplacedTasks.map((task) => `- ${buildUnplacedLine(task)}`),
   ].join("\n");
 }
@@ -492,7 +492,7 @@ function derivePlannerExportWarnings({
   return dedupeStrings([
     ...(carryForwardItems.length > 0
       ? [
-          "Not everything fit inside this planning window, so overflow was carried forward explicitly.",
+          "Not everything fit inside this planning window, so deferred tasks were carried forward explicitly.",
         ]
       : []),
     ...dueWarnings.map((warning) => warning.message),

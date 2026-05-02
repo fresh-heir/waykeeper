@@ -331,8 +331,6 @@ function BlockCountdownTimer({
 
   const isLightTheme = themeMode === "light";
   const timerStyle = {
-    "--wk-timer-overflow-angle": `${snapshot.overflowElapsedAngle}deg`,
-    "--wk-timer-angle": `${snapshot.elapsedAngle}deg`,
     "--wk-timer-fill": isLightTheme
       ? "rgba(0, 127, 107, 0.88)"
       : "rgba(75, 224, 202, 0.82)",
@@ -340,6 +338,11 @@ function BlockCountdownTimer({
       ? "rgba(48, 48, 235, 0.72)"
       : "rgba(219, 190, 255, 0.76)",
   } as CSSProperties;
+  const timerPath = describeCounterClockwiseSector(snapshot.remainingAngle, 39);
+  const overflowTimerPath = describeCounterClockwiseSector(
+    snapshot.overflowRemainingAngle,
+    48
+  );
 
   return (
     <div
@@ -359,22 +362,26 @@ function BlockCountdownTimer({
         }`}
         style={timerStyle}
       >
-        {snapshot.overflowMinutes > 0 ? (
-          <div
-            className="absolute inset-[8px] scale-x-[-1] rounded-full opacity-80"
-            style={{
-              background:
-                "conic-gradient(from -90deg, var(--wk-timer-overflow-fill) 0deg var(--wk-timer-overflow-angle), transparent var(--wk-timer-overflow-angle) 360deg)",
-            }}
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 size-full"
+          viewBox="0 0 112 112"
+        >
+          {snapshot.overflowMinutes > 0 && overflowTimerPath ? (
+            <path
+              d={overflowTimerPath}
+              fill="var(--wk-timer-overflow-fill)"
+              opacity="0.8"
+            />
+          ) : null}
+          <circle
+            cx="56"
+            cy="56"
+            fill="rgba(255,255,255,0.18)"
+            r="39"
           />
-        ) : null}
-        <div
-          className="absolute inset-[17px] scale-x-[-1] rounded-full"
-          style={{
-            background:
-              "conic-gradient(from -90deg, var(--wk-timer-fill) 0deg var(--wk-timer-angle), rgba(255,255,255,0.18) var(--wk-timer-angle) 360deg)",
-          }}
-        />
+          {timerPath ? <path d={timerPath} fill="var(--wk-timer-fill)" /> : null}
+        </svg>
         <div
           className={`absolute inset-[29px] rounded-full ${
             isLightTheme ? "bg-[color:var(--wk-paper)]" : "bg-[color:var(--wk-ink)]"
@@ -390,7 +397,7 @@ function BlockCountdownTimer({
         <span
           className="absolute left-1/2 top-1/2 h-[2px] w-8 origin-left rounded-full bg-[color:var(--wk-coral)]"
           style={{
-            transform: `rotate(${-snapshot.elapsedAngle - 90}deg)`,
+            transform: `rotate(${-snapshot.remainingAngle - 90}deg)`,
           }}
         />
         {snapshot.labels.map((label) => (
@@ -428,9 +435,56 @@ function BlockCountdownTimer({
             isLightTheme ? "text-[color:var(--wk-ink-muted)]" : "text-white/58"
           }`}
         >
-          The colored field fills counterclockwise from 0 as this waypoint runs.
+          Time left for this waypoint.
         </p>
       </div>
     </div>
   );
+}
+
+function describeCounterClockwiseSector(angle: number, radius: number) {
+  const clampedAngle = Math.min(Math.max(angle, 0), 360);
+
+  if (clampedAngle <= 0) {
+    return "";
+  }
+
+  const center = 56;
+  const startX = center;
+  const startY = center - radius;
+
+  if (clampedAngle >= 359.999) {
+    const bottomY = center + radius;
+
+    return [
+      `M ${center} ${center}`,
+      `L ${startX} ${startY}`,
+      `A ${radius} ${radius} 0 1 0 ${center} ${bottomY}`,
+      `A ${radius} ${radius} 0 1 0 ${startX} ${startY}`,
+      "Z",
+    ].join(" ");
+  }
+
+  const end = getCounterClockwisePoint(clampedAngle, radius, center);
+  const largeArcFlag = clampedAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${center} ${center}`,
+    `L ${startX} ${startY}`,
+    `A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+}
+
+function getCounterClockwisePoint(angle: number, radius: number, center: number) {
+  const radians = ((-90 - angle) * Math.PI) / 180;
+
+  return {
+    x: formatSvgNumber(center + radius * Math.cos(radians)),
+    y: formatSvgNumber(center + radius * Math.sin(radians)),
+  };
+}
+
+function formatSvgNumber(value: number) {
+  return Number(value.toFixed(3));
 }

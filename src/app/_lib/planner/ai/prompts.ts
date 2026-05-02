@@ -8,6 +8,7 @@ const SHARED_RULES = [
   "Return JSON only through the provided schema.",
   "If a supported field does not apply, return null instead of omitting it.",
   "The app state is the source of truth; your output is a proposal, not the canonical plan.",
+  "Treat timeAffinityLabel and beforeTaskIds as soft local timing hints; explicit anchors and user locks still win.",
   "Do not invent hidden hard events, unsupported fields, or new planner modes.",
   "Do not use prose as the primary artifact.",
   "Be conservative and believable rather than optimistic.",
@@ -40,7 +41,7 @@ export function buildPlannerAiSystemPrompt(
       return [
         ...SHARED_RULES,
         "Build a believable one-day route inside the planning window.",
-        "A validated local scaffold is provided first; treat it as a candidate route that already handles basic break math, anchors, and overflow accounting.",
+        "A validated local scaffold is provided first; treat it as a candidate route that already handles basic break math, anchors, and deferred-task accounting.",
         "Respect the provided paceMode. 'finish_sooner' means front-load when plausible; 'spread_out' means keep visible breathing room and avoid ending implausibly early when the day has real slack.",
         "Preserve route flow when reasonable, but treat that as a soft preference rather than a hard rule.",
         "Route coherence sits below: hard timing and anchors, must-do preservation, overload honesty, meaningful focus protection, and reasonable break integrity.",

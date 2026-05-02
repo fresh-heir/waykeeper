@@ -125,6 +125,24 @@ export interface TaskDueDatePreference {
   decisionState: TaskDueDateDecisionState;
 }
 
+export type TaskTimeAffinitySource =
+  | "meal"
+  | "day_part"
+  | "business_hours"
+  | "preparation"
+  | "sequence";
+
+export type TaskTimeAffinityStrength = "soft" | "strong";
+
+export interface TaskTimeAffinity {
+  source: TaskTimeAffinitySource;
+  displayLabel: string;
+  strength: TaskTimeAffinityStrength;
+  targetTime?: string;
+  earliestStartTime?: string;
+  latestEndTime?: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -142,6 +160,8 @@ export interface Task {
   dueAt?: string;
   dueDatePreference?: TaskDueDatePreference;
   timingPreference?: TaskTimingPreference;
+  timeAffinity?: TaskTimeAffinity;
+  beforeTaskIds?: string[];
   // These keep the item a task, but with a fixed-time scheduling constraint.
   hardStartTime?: string;
   hardEndTime?: string;

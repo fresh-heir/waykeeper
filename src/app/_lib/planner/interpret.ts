@@ -4,6 +4,7 @@ import {
   type DaySetupDraft,
   type IntakeFlowContext,
 } from "@/app/_lib/intake-flow";
+import { applyTimeAffinities } from "@/app/_lib/planner/time-affinity";
 import type {
   EnergyLevel,
   HardEvent,
@@ -89,12 +90,19 @@ export function interpretDaySetup({
     );
   });
 
+  const hardEvents = [...manualHardEvents, ...inferredHardEvents].sort(
+    (left, right) =>
+      new Date(left.startTime).getTime() - new Date(right.startTime).getTime()
+  );
+  const timeAwareTasks = applyTimeAffinities({
+    hardEvents,
+    planningWindow,
+    tasks,
+  });
+
   return {
-    tasks: applyProfileHintsToTasks(tasks, draft),
-    hardEvents: [...manualHardEvents, ...inferredHardEvents].sort(
-      (left, right) =>
-        new Date(left.startTime).getTime() - new Date(right.startTime).getTime()
-    ),
+    tasks: applyProfileHintsToTasks(timeAwareTasks, draft),
+    hardEvents,
     warnings,
   };
 }

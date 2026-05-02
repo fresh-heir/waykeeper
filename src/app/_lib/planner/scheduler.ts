@@ -82,6 +82,11 @@ interface PlacementCandidate {
   taskState: PendingTask;
 }
 
+interface TimeAffinityWait {
+  taskTitle: string;
+  waitUntilMs: number;
+}
+
 interface BreakWindowPlacement {
   block: ScheduleBlock;
   consumedTaskId?: string;
@@ -338,6 +343,28 @@ export function generateDraftSchedule({
         continue;
       }
 
+      const timeAffinityWait = findStrongTimeAffinityWait({
+        cursorMs,
+        minChunkMinutes: cadenceSettings.minChunkMinutes,
+        queue,
+        slotEndMs: slot.endMs,
+      });
+
+      if (timeAffinityWait) {
+        blocks.push(
+          createSpreadBufferBlock(
+            cursorMs,
+            timeAffinityWait.waitUntilMs,
+            offset,
+            timeAffinityWait.taskTitle
+          )
+        );
+        cursorMs = timeAffinityWait.waitUntilMs;
+        focusMinutesSinceBreak = 0;
+        focusBlocksSinceBreak = 0;
+        continue;
+      }
+
       const placement = findNextTaskPlacement(
         queue,
         cursorMs,
@@ -462,7 +489,7 @@ export function generateDraftSchedule({
 
   if (carryForwardProjection.carryForwardItems.length > 0) {
     warnings.push(
-      "Not everything fit inside this planning window, so overflow was carried forward explicitly."
+      "Not everything fit inside this planning window, so deferred tasks were carried forward explicitly."
     );
   }
 
@@ -1082,6 +1109,28 @@ function rebuildRemainingFlexibleBlocks({
         continue;
       }
 
+      const timeAffinityWait = findStrongTimeAffinityWait({
+        cursorMs,
+        minChunkMinutes: modeOptions.minChunkMinutes,
+        queue,
+        slotEndMs: slot.endMs,
+      });
+
+      if (timeAffinityWait) {
+        rebuiltBlocks.push(
+          createSpreadBufferBlock(
+            cursorMs,
+            timeAffinityWait.waitUntilMs,
+            offset,
+            timeAffinityWait.taskTitle
+          )
+        );
+        cursorMs = timeAffinityWait.waitUntilMs;
+        focusMinutesSinceBreak = 0;
+        focusBlocksSinceBreak = 0;
+        continue;
+      }
+
       const placement = findNextReplanTaskPlacement(
         queue,
         cursorMs,
@@ -1266,6 +1315,17 @@ function findNextReplanTaskPlacement(
     );
 
     if (!chunkMinutes) {
+      return;
+    }
+
+    if (
+      hasFittableUnfinishedDependency(
+        taskState,
+        queue,
+        slotMinutesRemaining,
+        modeOptions.minChunkMinutes
+      )
+    ) {
       return;
     }
 
@@ -2466,6 +2526,7 @@ function pickTaskPlacementCandidate({
   }
 
   const routeFlowSummary = buildRouteFlowSummary(queue, routeContextByTaskId);
+  const referenceMs = new Date(referenceTime).getTime();
 
   return [...candidates].sort((left, right) => {
     const leftIsBoundaryTask = left.taskState.task.id === boundaryTaskId;
@@ -2485,6 +2546,22 @@ function pickTaskPlacementCandidate({
       ROUTE_COHERENCE_PROTECTION_TOLERANCE
     ) {
       return protectionDelta;
+    }
+
+    const timeAffinityDelta =
+      getTimeAffinityPlacementScore(
+        right.taskState.task,
+        referenceMs,
+        right.chunkMinutes
+      ) -
+      getTimeAffinityPlacementScore(
+        left.taskState.task,
+        referenceMs,
+        left.chunkMinutes
+      );
+
+    if (timeAffinityDelta !== 0) {
+      return timeAffinityDelta;
     }
 
     const routeCoherenceDelta =
@@ -2887,6 +2964,17 @@ function findNextTaskPlacement(
     );
 
     if (!chunkMinutes) {
+      return;
+    }
+
+    if (
+      hasFittableUnfinishedDependency(
+        taskState,
+        queue,
+        slotMinutesRemaining,
+        cadenceSettings.minChunkMinutes
+      )
+    ) {
       return;
     }
 
@@ -3546,32 +3634,82 @@ function mapTaskToBlockType(task: Task): ScheduleBlock["blockType"] {
 }
 
 function isTooEarlyForTask(task: Task, cursorMs: number, windowEndMs: number) {
-  const preferredHour = getPreferredStartHour(task);
+  const preferredStartMs = getPreferredStartMs(task, cursorMs);
 
-  if (preferredHour === null) {
+  if (preferredStartMs === null) {
     return false;
+  }
+
+  const graceMs = task.timeAffinity?.earliestStartTime
+    ? 15 * 60000
+    : 90 * 60000;
+
+  if (cursorMs >= preferredStartMs - graceMs) {
+    return false;
+  }
+
+  return preferredStartMs < windowEndMs;
+}
+
+function getPreferredStartMs(task: Task, cursorMs: number) {
+  const userPreferredStartMs = getUserPreferredStartMs(task);
+
+  if (userPreferredStartMs !== null) {
+    return userPreferredStartMs;
+  }
+
+  const affinityPreferredStartMs = getTaskAffinityPreferredStartMs(task);
+
+  if (affinityPreferredStartMs !== null) {
+    return affinityPreferredStartMs;
+  }
+
+  const legacyPreferredHour = getLegacyPreferredStartHour(task);
+
+  if (legacyPreferredHour === null) {
+    return null;
   }
 
   const preferredStart = new Date(cursorMs);
 
-  preferredStart.setHours(Math.floor(preferredHour), preferredHour % 1 === 0.5 ? 30 : 0, 0, 0);
+  preferredStart.setHours(
+    Math.floor(legacyPreferredHour),
+    legacyPreferredHour % 1 === 0.5 ? 30 : 0,
+    0,
+    0
+  );
 
-  if (cursorMs >= preferredStart.getTime() - 90 * 60000) {
-    return false;
-  }
-
-  return preferredStart.getTime() < windowEndMs;
+  return preferredStart.getTime();
 }
 
-function getPreferredStartHour(task: Task) {
+function getUserPreferredStartMs(task: Task) {
   if (task.timingPreference?.kind === "preferred_time") {
-    const preferredHour = getHourValue(task.timingPreference.preferredStartTime);
+    const preferredStartMs = new Date(
+      task.timingPreference.preferredStartTime
+    ).getTime();
 
-    if (preferredHour !== null) {
-      return preferredHour;
+    if (Number.isFinite(preferredStartMs)) {
+      return preferredStartMs;
     }
   }
 
+  return null;
+}
+
+function getTaskAffinityPreferredStartMs(task: Task) {
+  const preferredStart =
+    task.timeAffinity?.earliestStartTime ?? task.timeAffinity?.targetTime;
+
+  if (!preferredStart) {
+    return null;
+  }
+
+  const preferredStartMs = new Date(preferredStart).getTime();
+
+  return Number.isFinite(preferredStartMs) ? preferredStartMs : null;
+}
+
+function getLegacyPreferredStartHour(task: Task) {
   const normalized = `${task.title} ${task.rawText ?? ""}`.toLowerCase();
 
   if (normalized.includes("breakfast")) {
@@ -3589,17 +3727,154 @@ function getPreferredStartHour(task: Task) {
   return null;
 }
 
-function getHourValue(isoDateTime: string) {
-  const match = isoDateTime.match(/T(\d{2}):(\d{2})/);
+function getTimeAffinityPlacementScore(
+  task: Task,
+  cursorMs: number,
+  chunkMinutes: number
+) {
+  const affinity = task.timeAffinity;
 
-  if (!match) {
+  if (!affinity) {
+    return 0;
+  }
+
+  const chunkEndMs = cursorMs + chunkMinutes * 60000;
+  const earliestMs = affinity.earliestStartTime
+    ? new Date(affinity.earliestStartTime).getTime()
+    : null;
+  const latestMs = affinity.latestEndTime
+    ? new Date(affinity.latestEndTime).getTime()
+    : null;
+  const targetMs = affinity.targetTime
+    ? new Date(affinity.targetTime).getTime()
+    : null;
+  const strengthMultiplier = affinity.strength === "strong" ? 2 : 1;
+  let score = 0;
+
+  if (
+    earliestMs !== null &&
+    latestMs !== null &&
+    cursorMs >= earliestMs &&
+    chunkEndMs <= latestMs
+  ) {
+    score += 5 * strengthMultiplier;
+  }
+
+  if (earliestMs !== null && cursorMs < earliestMs) {
+    score -= 6 * strengthMultiplier;
+  }
+
+  if (latestMs !== null && chunkEndMs > latestMs) {
+    score -= 5 * strengthMultiplier;
+  }
+
+  if (targetMs !== null) {
+    score += Math.max(
+      0,
+      6 - Math.floor(Math.abs(cursorMs - targetMs) / (30 * 60000))
+    );
+  }
+
+  return score;
+}
+
+function findStrongTimeAffinityWait({
+  cursorMs,
+  minChunkMinutes,
+  queue,
+  slotEndMs,
+}: {
+  cursorMs: number;
+  minChunkMinutes: number;
+  queue: PendingTask[];
+  slotEndMs: number;
+}): TimeAffinityWait | null {
+  const slotMinutesRemaining = diffMinutes(cursorMs, slotEndMs);
+  const fittableTasks = queue.filter((taskState) => {
+    if (taskState.remainingMinutes <= 0) {
+      return false;
+    }
+
+    const neededMinutes = Math.min(
+      taskState.remainingMinutes,
+      minChunkMinutes
+    );
+
+    return Math.min(taskState.remainingMinutes, slotMinutesRemaining) >= neededMinutes;
+  });
+
+  if (fittableTasks.length === 0) {
     return null;
   }
 
-  const hours = Number.parseInt(match[1], 10);
-  const minutes = Number.parseInt(match[2], 10);
+  let wait: TimeAffinityWait | null = null;
 
-  return hours + minutes / 60;
+  for (const taskState of fittableTasks) {
+    const earliestMs = getStrongAffinityEarliestStartMs(taskState.task);
+
+    if (earliestMs === null || earliestMs <= cursorMs) {
+      return null;
+    }
+
+    const neededMinutes = Math.min(
+      taskState.remainingMinutes,
+      minChunkMinutes
+    );
+
+    if (earliestMs + neededMinutes * 60000 > slotEndMs) {
+      return null;
+    }
+
+    if (!wait || earliestMs < wait.waitUntilMs) {
+      wait = {
+        taskTitle: taskState.task.title,
+        waitUntilMs: earliestMs,
+      };
+    }
+  }
+
+  if (!wait || wait.waitUntilMs - cursorMs < 5 * 60000) {
+    return null;
+  }
+
+  return wait;
+}
+
+function getStrongAffinityEarliestStartMs(task: Task) {
+  if (
+    task.timeAffinity?.strength !== "strong" ||
+    !task.timeAffinity.earliestStartTime
+  ) {
+    return null;
+  }
+
+  const earliestMs = new Date(task.timeAffinity.earliestStartTime).getTime();
+
+  return Number.isFinite(earliestMs) ? earliestMs : null;
+}
+
+function hasFittableUnfinishedDependency(
+  taskState: PendingTask,
+  queue: PendingTask[],
+  slotMinutesRemaining: number,
+  minChunkMinutes: number
+) {
+  return queue.some((candidate) => {
+    if (!candidate.task.beforeTaskIds?.includes(taskState.task.id)) {
+      return false;
+    }
+
+    if (candidate.remainingMinutes <= 0) {
+      return false;
+    }
+
+    const availableMinutes = Math.min(
+      candidate.remainingMinutes,
+      slotMinutesRemaining
+    );
+
+    return availableMinutes >= Math.min(candidate.remainingMinutes, minChunkMinutes);
+  });
 }
 
 function priorityRank(priority: Priority) {

@@ -386,7 +386,7 @@ async function loadScenario(page: Page, scenarioName: string) {
   await page.getByRole("button", { name: "Load scenario" }).click();
 }
 
-async function seedDistinctOverflowBuckets(page: Page) {
+async function seedDistinctDeferredBuckets(page: Page) {
   await loadScenarioAndBuild(page, "Overloaded liar-detector day");
   await expect
     .poll(async () =>
@@ -442,6 +442,25 @@ async function seedDistinctOverflowBuckets(page: Page) {
     ];
 
     window.localStorage.setItem(storageKey, JSON.stringify(session));
+
+    const activeDraftId = window.localStorage.getItem("waykeeper-active-plan-draft");
+    const draftLibraryRawValue = window.localStorage.getItem("waykeeper-plan-drafts");
+
+    if (!activeDraftId || !draftLibraryRawValue) {
+      return;
+    }
+
+    const draftLibrary = JSON.parse(draftLibraryRawValue);
+    draftLibrary.drafts = (draftLibrary.drafts ?? []).map(
+      (draft: { id?: string; session?: unknown }) =>
+        draft.id === activeDraftId
+          ? {
+              ...draft,
+              session,
+            }
+          : draft
+    );
+    window.localStorage.setItem("waykeeper-plan-drafts", JSON.stringify(draftLibrary));
   });
   await page.reload();
 }
@@ -1324,25 +1343,25 @@ test("keeps replan preview accounting internally consistent", async ({ page }) =
   await expect(page.getByRole("button", { name: "Apply revised plan" })).toBeVisible();
 });
 
-test("shows honest overflow for overloaded days", async ({ page }) => {
+test("shows honest deferred tasks for overloaded days", async ({ page }) => {
   await loadScenarioAndBuild(page, "Overloaded liar-detector day");
 
   await getReplanTrigger(page).click();
   await expect(page.getByTestId("oracle-panel")).toContainText("Carried forward");
   await expect(page.getByTestId("oracle-panel")).toContainText("6 tasks");
-  await expect(page.getByTestId("oracle-panel")).toContainText("Unplaced today");
+  await expect(page.getByTestId("oracle-panel")).toContainText("Deferred today");
   await expect(page.getByTestId("oracle-panel")).toContainText("0 tasks");
 });
 
-test("keeps same-day unplaced and carried-forward overflow in distinct buckets", async ({
+test("keeps same-day deferred and carried-forward work in distinct buckets", async ({
   page,
 }) => {
-  await seedDistinctOverflowBuckets(page);
+  await seedDistinctDeferredBuckets(page);
 
   await getReplanTrigger(page).click();
   await expect(page.getByTestId("oracle-panel")).toContainText("Carried forward");
   await expect(page.getByTestId("oracle-panel")).toContainText("5 tasks");
-  await expect(page.getByTestId("oracle-panel")).toContainText("Unplaced today");
+  await expect(page.getByTestId("oracle-panel")).toContainText("Deferred today");
   await expect(page.getByTestId("oracle-panel")).toContainText("1 tasks");
 });
 
@@ -1491,7 +1510,7 @@ test("route export appears only after a route exists and defaults to daily brief
   expect(exportText).toContain("Now / Next");
   expect(exportText).toContain("Schedule");
   expect(exportText).toContain("Oracle note");
-  expect(exportText).toContain("Overflow / carry-forward");
+  expect(exportText).toContain("Deferred tasks / carry-forward");
   expect(exportText).toContain("How to use this");
 });
 

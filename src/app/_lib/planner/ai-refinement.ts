@@ -267,7 +267,7 @@ function compareOverflow({
       change: "better",
       reason:
         target === "route"
-          ? "It changes which tasks stay outside today, so the overflow story is meaningfully different."
+          ? "It changes which tasks stay outside today, so the deferred-task story is meaningfully different."
           : "It changes which tasks stay outside the revised remainder, so the tradeoff is meaningfully different.",
     };
   }

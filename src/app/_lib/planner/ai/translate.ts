@@ -140,7 +140,7 @@ export function translateAiDraftResponse({
   const warnings = dedupeStrings([
     ...(carryForwardProjection.carryForwardItems.length > 0
       ? [
-          "Not everything fit inside this planning window, so overflow was carried forward explicitly.",
+          "Not everything fit inside this planning window, so deferred tasks were carried forward explicitly.",
         ]
       : []),
     ...dueWarnings.map((warning) => warning.message),
@@ -164,7 +164,7 @@ export function translateAiDraftResponse({
       `Accepted ${countFlexibleBlocks(response.blocks, tasks)} proposed flexible blocks across a one-day route.`,
       ...(response.summary ? [response.summary] : []),
       ...(carryForwardProjection.carryForwardItems.length > 0
-        ? [`Carried forward ${carryForwardProjection.carryForwardItems.length} tasks after app-side overflow accounting.`]
+        ? [`Carried forward ${carryForwardProjection.carryForwardItems.length} tasks after app-side deferred-task accounting.`]
         : []),
     ],
     repairNotes,
@@ -426,6 +426,8 @@ function alignTaskRefinements({
         ? baseTask.hardEndTime
         : candidateTask.hardEndTime ?? baseTask.hardEndTime,
       timingPreference: baseTask.timingPreference,
+      timeAffinity: baseTask.timeAffinity,
+      beforeTaskIds: baseTask.beforeTaskIds,
       carryForward: baseTask.carryForward,
       carriedFromDate: baseTask.carriedFromDate,
       carryForwardReason: baseTask.carryForwardReason,

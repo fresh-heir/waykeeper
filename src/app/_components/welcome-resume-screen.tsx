@@ -242,7 +242,7 @@ export function WelcomeResumeScreen({
               Waykeeper offers you
             </p>
             <p className="mt-2 font-display text-[clamp(1.55rem,2.6vw,2.3rem)] leading-none tracking-[-0.05em]">
-              A readable route for today, with breaks and overflow handled.
+              A readable route for today, with breaks and deferred tasks handled.
             </p>
             {nextBlockTitle || progressLabel ? (
               <p className="mt-3 text-sm leading-6 text-[color:var(--wk-ink-muted)]">

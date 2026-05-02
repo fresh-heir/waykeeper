@@ -2320,7 +2320,7 @@ function OracleAdjustDeck({
                   value={`${routeCarryForwardItems.length} tasks`}
                 />
                 <CompactMetric
-                  label="Unplaced today"
+                  label="Deferred today"
                   value={`${routeUnplacedTasks.length} tasks`}
                 />
               </div>

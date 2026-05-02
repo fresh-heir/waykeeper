@@ -206,7 +206,7 @@ export const plannerDevScenarios: PlannerDevScenario[] = [
     id: "overloaded-liar-detector-day",
     name: "Overloaded liar-detector day",
     description:
-      "Intentionally overloaded day for honest overflow, believable carry-forward, and route-truth checks.",
+      "Intentionally overloaded day for honest deferral, believable carry-forward, and route-truth checks.",
     planningStart: "09:00",
     planningEnd: "17:00",
     breakMode: "restful",
@@ -234,7 +234,7 @@ export const plannerDevScenarios: PlannerDevScenario[] = [
     ]),
     covers: ["overload honesty", "unplaced tasks", "hard-anchor protection"],
     notes: [
-      "Expected: not everything fits; overflow should stay legible instead of pretending the day works.",
+      "Expected: not everything fits; deferred tasks should stay legible instead of pretending the day works.",
     ],
   },
   {
@@ -510,7 +510,7 @@ export const plannerDevScenarios: PlannerDevScenario[] = [
       "full palette preview",
       "many short tasks",
       "small-task routing",
-      "overflow readability",
+      "deferred-task readability",
     ],
     notes: [
       "Expected: useful for checking whether stacked focus, admin, self-care, chore, errand, break, and anchor blocks stay distinct without turning into visual mush.",

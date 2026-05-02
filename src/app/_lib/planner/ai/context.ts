@@ -326,6 +326,13 @@ function buildFullTaskPayload(task: Task): PlannerAiParseTaskTransport {
 function buildSchedulingTaskPayload(
   task: Task | PlannerAiSchedulingTaskTransport
 ): PlannerAiSchedulingTaskTransport {
+  const timeAffinityLabel =
+    "timeAffinityLabel" in task && task.timeAffinityLabel
+      ? task.timeAffinityLabel
+      : "timeAffinity" in task && task.timeAffinity
+        ? task.timeAffinity.displayLabel
+        : undefined;
+
   return {
     id: task.id,
     title: task.title,
@@ -338,6 +345,7 @@ function buildSchedulingTaskPayload(
     deferrable: task.deferrable,
     energyLevel: task.energyLevel,
     dueAt: task.dueAt,
+    beforeTaskIds: task.beforeTaskIds ? [...task.beforeTaskIds] : undefined,
     hardStartTime: task.hardStartTime,
     hardEndTime: task.hardEndTime,
     carryForward: task.carryForward,
@@ -347,6 +355,7 @@ function buildSchedulingTaskPayload(
       "routeContext" in task && task.routeContext
         ? task.routeContext
         : inferTaskRouteFlowContext(task as Task),
+    timeAffinityLabel,
   };
 }
 
@@ -476,6 +485,9 @@ function buildTaskSnapshot(
   if (task.deferrable !== undefined) snapshot.deferrable = task.deferrable;
   if (task.energyLevel !== undefined) snapshot.energyLevel = task.energyLevel;
   if (task.dueAt !== undefined) snapshot.dueAt = task.dueAt;
+  if (task.beforeTaskIds !== undefined) {
+    snapshot.beforeTaskIds = [...task.beforeTaskIds];
+  }
   if (task.hardStartTime !== undefined) snapshot.hardStartTime = task.hardStartTime;
   if (task.hardEndTime !== undefined) snapshot.hardEndTime = task.hardEndTime;
   if (task.carryForward !== undefined) snapshot.carryForward = task.carryForward;
@@ -484,6 +496,9 @@ function buildTaskSnapshot(
     snapshot.carryForwardStatus = task.carryForwardStatus;
   }
   if (task.routeContext !== undefined) snapshot.routeContext = task.routeContext;
+  if (task.timeAffinityLabel !== undefined) {
+    snapshot.timeAffinityLabel = task.timeAffinityLabel;
+  }
 
   return snapshot;
 }

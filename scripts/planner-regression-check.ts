@@ -42,6 +42,7 @@ import {
 } from "@/app/_lib/planner/ai/translate";
 import { parseFlexibleLocalDateTimeInput } from "@/app/_lib/planner/date-time";
 import { interpretDaySetup } from "@/app/_lib/planner/interpret";
+import { applyTimeAffinities } from "@/app/_lib/planner/time-affinity";
 import {
   buildCountdownLabels,
   createBlockCountdownSnapshot,
@@ -370,6 +371,8 @@ function toPlannerAiTask(task: Task) {
     carriedFromDate: task.carriedFromDate,
     carryForwardReason: task.carryForwardReason,
     carryForwardStatus: task.carryForwardStatus,
+    beforeTaskIds: task.beforeTaskIds,
+    timeAffinityLabel: task.timeAffinity?.displayLabel,
     notes: task.notes,
     source: task.source,
   };
@@ -399,6 +402,43 @@ function createRegressionTask({
     source: "user",
     ...overrides,
   };
+}
+
+function getMinuteOfDay(isoDateTime: string) {
+  const match = isoDateTime.match(/T(\d{2}):(\d{2})/);
+
+  assert.ok(match, `Expected ISO local time: ${isoDateTime}`);
+
+  const [, hourText = "0", minuteText = "0"] = match;
+
+  return Number(hourText) * 60 + Number(minuteText);
+}
+
+function findBlockByTitle(
+  dayPlan: DraftScheduleResponse["dayPlan"],
+  titlePattern: RegExp
+) {
+  const block = dayPlan.blocks.find((item) => titlePattern.test(item.title));
+
+  assert.ok(block, `Expected route block matching ${titlePattern}`);
+
+  return block;
+}
+
+function assertBlockBefore(
+  dayPlan: DraftScheduleResponse["dayPlan"],
+  firstTitlePattern: RegExp,
+  secondTitlePattern: RegExp,
+  message: string
+) {
+  const firstBlock = findBlockByTitle(dayPlan, firstTitlePattern);
+  const secondBlock = findBlockByTitle(dayPlan, secondTitlePattern);
+
+  assert.ok(
+    new Date(firstBlock.endTime).getTime() <=
+      new Date(secondBlock.startTime).getTime(),
+    message
+  );
 }
 
 function toPlannerAiBlock(
@@ -653,7 +693,7 @@ function assertReplanIsValid(
   remainingTaskIds.forEach((taskId) => {
     assert.ok(
       remainderTaskIds.has(taskId),
-      `overloaded-liar-detector-day: task ${taskId} still has unscheduled minutes and must stay visible in today's overflow accounting`
+      `overloaded-liar-detector-day: task ${taskId} still has unscheduled minutes and must stay visible in today's deferred-task accounting`
     );
   });
 }
@@ -773,6 +813,401 @@ function assertReplanIsValid(
     dueSuggestionTask?.timingPreference?.kind,
     undefined,
     'phrases like "by 12:30" should not be treated as lock-to-time suggestions'
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "08:00");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "20:30"),
+  };
+  const tasks = applyTimeAffinities({
+    hardEvents: [],
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-launch-memo",
+        title: "Draft launch memo",
+        overrides: {
+          estimatedMinutes: 120,
+          type: "deep_work",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+          splittable: true,
+          energyLevel: "high",
+        },
+      }),
+      createRegressionTask({
+        id: "task-project-notes",
+        title: "Review project notes",
+        overrides: {
+          estimatedMinutes: 120,
+          type: "deep_work",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+          splittable: true,
+          energyLevel: "high",
+        },
+      }),
+      createRegressionTask({
+        id: "task-metrics",
+        title: "Build metrics checklist",
+        overrides: {
+          estimatedMinutes: 90,
+          type: "admin",
+          priority: "medium",
+        },
+      }),
+      createRegressionTask({
+        id: "task-inbox",
+        title: "Clean inbox",
+        overrides: {
+          estimatedMinutes: 60,
+          type: "admin",
+          priority: "medium",
+        },
+      }),
+      createRegressionTask({
+        id: "task-handoff",
+        title: "Write tomorrow handoff",
+        overrides: {
+          estimatedMinutes: 60,
+          type: "admin",
+          priority: "medium",
+        },
+      }),
+      createRegressionTask({
+        id: "task-dinner",
+        title: "Eat dinner",
+        overrides: {
+          estimatedMinutes: 30,
+          type: "self_care",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+    ],
+  });
+
+  assert.equal(
+    tasks.find((task) => task.id === "task-dinner")?.timeAffinity?.displayLabel,
+    "Dinner belongs in the evening.",
+    "eat dinner should receive an evening affinity"
+  );
+
+  const route = buildDirectDraftRoute({
+    currentTime,
+    planningWindow,
+    rawText: "time-affinity dinner",
+    tasks,
+  });
+  const dinnerBlock = findBlockByTitle(route.dayPlan, /Eat dinner/i);
+
+  assert.ok(
+    getMinuteOfDay(dinnerBlock.startTime) >= 16 * 60 + 30,
+    "eat dinner should land in the evening when a reasonable slot exists"
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "09:00");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "14:30"),
+  };
+  const tasks = applyTimeAffinities({
+    hardEvents: [],
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-project-memo",
+        title: "Write project memo",
+        overrides: {
+          estimatedMinutes: 90,
+          type: "deep_work",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+          splittable: true,
+        },
+      }),
+      createRegressionTask({
+        id: "task-prepare-lunch",
+        title: "Prepare lunch",
+        overrides: {
+          estimatedMinutes: 20,
+          type: "chore",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+      createRegressionTask({
+        id: "task-eat-lunch",
+        title: "Eat lunch",
+        overrides: {
+          estimatedMinutes: 30,
+          type: "self_care",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+    ],
+  });
+
+  assert.ok(
+    tasks
+      .find((task) => task.id === "task-prepare-lunch")
+      ?.beforeTaskIds?.includes("task-eat-lunch"),
+    "prepare lunch should record eat lunch as a same-day ordering target"
+  );
+
+  const route = buildDirectDraftRoute({
+    currentTime,
+    planningWindow,
+    rawText: "prepare lunch eat lunch",
+    tasks,
+  });
+
+  assertBlockBefore(
+    route.dayPlan,
+    /Prepare lunch/i,
+    /Eat lunch/i,
+    "prepare lunch should land before eat lunch"
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "08:00");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "17:00"),
+  };
+  const hardEvents: HardEvent[] = [
+    {
+      id: "event-q2-client-update",
+      title: "Q2 client update",
+      startTime: buildScenarioIsoDateTime("2026-03-25", "14:00"),
+      endTime: buildScenarioIsoDateTime("2026-03-25", "15:00"),
+      locked: true,
+      source: "user",
+    },
+  ];
+  const tasks = applyTimeAffinities({
+    hardEvents,
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-prep-q2-client-update",
+        title: "Prep Q2 client update",
+        overrides: {
+          estimatedMinutes: 45,
+          type: "admin",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+      createRegressionTask({
+        id: "task-draft-launch-notes",
+        title: "Draft launch notes",
+        overrides: {
+          estimatedMinutes: 120,
+          type: "deep_work",
+          priority: "medium",
+          splittable: true,
+        },
+      }),
+    ],
+  });
+  const prepTask = tasks.find((task) => task.id === "task-prep-q2-client-update");
+
+  assert.equal(
+    prepTask?.timeAffinity?.latestEndTime,
+    hardEvents[0]?.startTime,
+    "prep for a fixed event should carry a latest-end hint"
+  );
+
+  const route = buildDirectDraftRoute({
+    currentTime,
+    hardEvents,
+    planningWindow,
+    rawText: "prep q2 before client update",
+    tasks,
+  });
+  const prepBlock = findBlockByTitle(route.dayPlan, /Prep Q2 client update/i);
+
+  assert.ok(
+    new Date(prepBlock.endTime).getTime() <=
+      new Date(hardEvents[0]?.startTime ?? "").getTime(),
+    "prep Q2 client update should finish before the matching fixed event"
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "06:30");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "18:00"),
+  };
+  const tasks = applyTimeAffinities({
+    hardEvents: [],
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-strategy-memo",
+        title: "Write strategy memo",
+        overrides: {
+          estimatedMinutes: 120,
+          type: "deep_work",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+          splittable: true,
+          energyLevel: "high",
+        },
+      }),
+      createRegressionTask({
+        id: "task-call-pharmacy",
+        title: "Call pharmacy",
+        overrides: {
+          estimatedMinutes: 15,
+          type: "errand",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+          energyLevel: "low",
+        },
+      }),
+      createRegressionTask({
+        id: "task-fold-laundry",
+        title: "Fold laundry",
+        overrides: {
+          estimatedMinutes: 30,
+          type: "chore",
+          priority: "low",
+        },
+      }),
+    ],
+  });
+  const route = buildDirectDraftRoute({
+    currentTime,
+    planningWindow,
+    rawText: "business hour call",
+    tasks,
+  });
+  const callBlock = findBlockByTitle(route.dayPlan, /Call pharmacy/i);
+
+  assert.ok(
+    getMinuteOfDay(callBlock.startTime) >= 8 * 60 + 45,
+    "business-hour calls should avoid very early slots when possible"
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "19:30");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "20:30"),
+  };
+  const tasks = applyTimeAffinities({
+    hardEvents: [],
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-breakfast",
+        title: "Eat breakfast",
+        overrides: {
+          estimatedMinutes: 30,
+          type: "self_care",
+          priority: "high",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+    ],
+  });
+  const route = buildDirectDraftRoute({
+    currentTime,
+    planningWindow,
+    rawText: "impossible breakfast fallback",
+    tasks,
+  });
+
+  findBlockByTitle(route.dayPlan, /Eat breakfast/i);
+  assert.equal(
+    route.unplacedTasks.some((task) => task.taskId === "task-breakfast"),
+    false,
+    "impossible preferred windows should fall back instead of dropping must-do work"
+  );
+}
+
+{
+  const currentTime = buildScenarioIsoDateTime("2026-03-25", "09:00");
+  const planningWindow = {
+    startTime: currentTime,
+    endTime: buildScenarioIsoDateTime("2026-03-25", "14:30"),
+  };
+  const tasks = applyTimeAffinities({
+    hardEvents: [],
+    planningWindow,
+    tasks: [
+      createRegressionTask({
+        id: "task-prepare-lunch",
+        title: "Prepare lunch",
+        overrides: {
+          estimatedMinutes: 20,
+          type: "chore",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+      createRegressionTask({
+        id: "task-eat-lunch",
+        title: "Eat lunch",
+        overrides: {
+          estimatedMinutes: 30,
+          type: "self_care",
+          priority: "medium",
+          mustDoToday: true,
+          deferrable: false,
+        },
+      }),
+      createRegressionTask({
+        id: "task-clean-inbox",
+        title: "Clean inbox",
+        overrides: {
+          estimatedMinutes: 60,
+          type: "admin",
+          priority: "medium",
+          splittable: true,
+        },
+      }),
+    ],
+  });
+  const route = buildDirectDraftRoute({
+    currentTime,
+    planningWindow,
+    rawText: "oracle prepare lunch",
+    tasks,
+  });
+  const preview = replanRemainingDay({
+    currentTime,
+    dayPlan: route.dayPlan,
+    replanMode: "replan_from_now",
+  });
+
+  assertBlockBefore(
+    preview.dayPlan,
+    /Prepare lunch/i,
+    /Eat lunch/i,
+    "Oracle replan should preserve prep-before-target ordering"
   );
 }
 
@@ -1455,14 +1890,14 @@ function assertReplanIsValid(
   assert.equal(
     response.carryForwardItems.some((item) => item.taskId === "task-due-call"),
     false,
-    "earlier due work should be protected ahead of equivalent no-due overflow"
+    "earlier due work should be protected ahead of equivalent no-due deferred work"
   );
   assert.equal(
     response.carryForwardItems.some(
       (item) => item.taskId === "task-no-due-reading"
     ),
     true,
-    "overflow should prefer carrying forward lower-protection no-due work"
+    "deferral should prefer carrying forward lower-protection no-due work"
   );
 }
 
@@ -1586,7 +2021,7 @@ function assertReplanIsValid(
 
   assert.ok(
     splitCarryForwardItem,
-    "split task overflow should create an explicit carry-forward remainder"
+    "split task deferral should create an explicit carry-forward remainder"
   );
   assert.ok(splitLedgerEntry, "split task should still exist in the minute ledger");
   assert.equal(
@@ -1641,7 +2076,7 @@ function assertReplanIsValid(
   assert.equal(
     response.carryForwardItems.some((item) => item.taskId === "task-repeat-defer"),
     false,
-    "repeatedly deferred work should gain protection in overflow tradeoffs"
+    "repeatedly deferred work should gain protection in deferral tradeoffs"
   );
   assert.equal(
     response.carryForwardItems.some((item) => item.taskId === "task-later-due"),
@@ -1825,7 +2260,7 @@ function assertReplanIsValid(
       (item) => item.taskId === editedTaskId
     ).length,
     1,
-    "overflow from an accepted-and-edited carry-forward task should produce one carry-forward remainder tied to the edited intake task"
+    "deferred work from an accepted-and-edited carry-forward task should produce one carry-forward remainder tied to the edited intake task"
   );
 
   const replannedEditedRoute = replanRemainingDay({
@@ -3022,7 +3457,7 @@ for (const scenarioId of [
   assert.equal(
     overflowEvaluation.outcome,
     "offer",
-    "keeping an overflowed task inside today should qualify as a materially better AI refinement"
+    "keeping a deferred task inside today should qualify as a materially better AI refinement"
   );
 }
 
@@ -3347,7 +3782,7 @@ for (const scenarioId of [
   assert.equal(
     shouldUseHighTierReplanModel(lowTierPayload),
     false,
-    "routine replans without anchor pressure or overflow should stay on the standard replan model tier"
+    "routine replans without anchor pressure or deferral pressure should stay on the standard replan model tier"
   );
   assert.equal(
     shouldUseHighTierReplanModel({
@@ -4219,7 +4654,7 @@ for (const scenarioId of [
       (item) => item.taskId === "task-carry-forward-late-ai"
     ),
     true,
-    "AI draft translation should preserve carry-forward accounting for overflowed work"
+    "AI draft translation should preserve carry-forward accounting for deferred work"
   );
   assert.equal(
     aiTranslatedDraft.value.dueWarnings.some(
@@ -4287,7 +4722,7 @@ for (const scenarioId of [
   const selectedRouteSource = selectPlannerExportSource({
     draftScheduleResponse: exportDraft,
     replanPreview: null,
-    routeWarnings: ["Overflow stayed visible in the built route."],
+    routeWarnings: ["Deferred tasks stayed visible in the built route."],
   });
 
   assert.ok(selectedRouteSource, "planner export source should exist for a built route");
@@ -4301,7 +4736,7 @@ for (const scenarioId of [
   const rawText = exportBundle.rawText;
   const warningsIndex = rawText.indexOf("\n\nWarnings\n");
   const carryForwardIndex = rawText.indexOf("\n\nCarry forward\n");
-  const unplacedIndex = rawText.indexOf("\n\nUnplaced today\n");
+  const unplacedIndex = rawText.indexOf("\n\nDeferred today\n");
   const oracleAdviceIndex = rawText.indexOf("\n\nOracle guidance\n");
 
   assert.ok(
@@ -4314,13 +4749,13 @@ for (const scenarioId of [
   );
   assert.ok(
     rawText.includes(
-      "Carry forward\n- Finalize referral note | 35m remaining | Overflow | From 2026-03-24"
+      "Carry forward\n- Finalize referral note | 35m remaining | Deferred by capacity | From 2026-03-24"
     ),
     "planner export raw text should summarize carried-forward work"
   );
   assert.ok(
     rawText.includes(
-      "Unplaced today\n- Read nephrology notes | 40m remaining | Needs a longer open slot"
+      "Deferred today\n- Read nephrology notes | 40m remaining | Needs a longer open slot"
     ),
     "planner export raw text should summarize unplaced work"
   );
@@ -4370,7 +4805,7 @@ for (const scenarioId of [
     "planner export raw text should omit empty carry-forward sections"
   );
   assert.equal(
-    minimalExportBundle.rawText.includes("\n\nUnplaced today\n"),
+    minimalExportBundle.rawText.includes("\n\nDeferred today\n"),
     false,
     "planner export raw text should omit empty unplaced sections"
   );
@@ -4681,6 +5116,10 @@ assert.equal(
   50,
   "active countdown should use the block duration as the timer max when it is already a 5-minute increment"
 );
+assert.ok(
+  Math.abs(activeCountdown.remainingAngle - 112.2) < 0.001,
+  "active countdown should draw the colored field from 0 to the remaining time, not elapsed time"
+);
 assert.deepEqual(
   activeCountdown.labels.slice(0, 3),
   [
@@ -4702,6 +5141,11 @@ assert.equal(
   completedCountdown.remainingLabel,
   "0s",
   "completed countdown should clamp remaining time at zero"
+);
+assert.equal(
+  completedCountdown.remainingAngle,
+  0,
+  "completed countdown should drain the colored field back to zero"
 );
 
 const longCountdown = createBlockCountdownSnapshot({
@@ -4725,6 +5169,16 @@ assert.equal(
   longCountdown.overflowMinutes,
   45,
   "long countdown should expose overflow minutes for the inner overflow field"
+);
+assert.equal(
+  longCountdown.remainingAngle,
+  360,
+  "long countdown should keep the main face full until remaining time drops under the 60-minute face"
+);
+assert.equal(
+  longCountdown.overflowRemainingAngle,
+  240,
+  "long countdown should drain overflow time before the main 60-minute face"
 );
 assert.deepEqual(
   buildCountdownLabels(60, 5).slice(0, 4).map((label) => label.label),

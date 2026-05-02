@@ -10,13 +10,13 @@ export interface BlockCountdownSnapshot {
   durationLabel: string;
   durationMs: number;
   dialMaxMinutes: number;
-  elapsedAngle: number;
   elapsedMs: number;
   labelMaxMinutes: number;
   labelStepMinutes: number;
   labels: CountdownLabel[];
-  overflowElapsedAngle: number;
+  overflowRemainingAngle: number;
   overflowMinutes: number;
+  remainingAngle: number;
   remainingLabel: string;
   remainingMs: number;
   remainingRatio: number;
@@ -55,26 +55,28 @@ export function createBlockCountdownSnapshot(input: {
   );
   const dialMaxMinutes = labelMaxMinutes;
   const labelStepMinutes = 5;
-  const elapsedMinutes = elapsedMs / MINUTE_MS;
+  const remainingMinutes = remainingMs / MINUTE_MS;
   const overflowMinutes = Math.max(0, durationMinutes - dialMaxMinutes);
-  const overflowElapsedMinutes =
+  const overflowRemainingMinutes =
     overflowMinutes > 0
-      ? clamp(elapsedMinutes - dialMaxMinutes, 0, overflowMinutes)
+      ? clamp(remainingMinutes - dialMaxMinutes, 0, overflowMinutes)
       : 0;
+  const dialRemainingMinutes = Math.min(remainingMinutes, dialMaxMinutes);
 
   return {
     durationLabel: formatDuration(durationMs, { includeSeconds: false }),
     dialMaxMinutes,
     durationMs,
-    elapsedAngle:
-      (Math.min(elapsedMinutes, dialMaxMinutes) / dialMaxMinutes) * 360,
     elapsedMs,
     labelMaxMinutes,
     labelStepMinutes,
     labels: buildCountdownLabels(labelMaxMinutes, labelStepMinutes),
-    overflowElapsedAngle:
-      overflowMinutes > 0 ? (overflowElapsedMinutes / overflowMinutes) * 360 : 0,
+    overflowRemainingAngle:
+      overflowMinutes > 0
+        ? (overflowRemainingMinutes / overflowMinutes) * 360
+        : 0,
     overflowMinutes,
+    remainingAngle: (dialRemainingMinutes / dialMaxMinutes) * 360,
     remainingLabel: formatDuration(remainingMs, { includeSeconds: true }),
     remainingMs,
     remainingRatio,

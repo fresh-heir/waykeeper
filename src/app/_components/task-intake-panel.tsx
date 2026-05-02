@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   BotanicalGlyph,
   GeneratedWaykeeperAsset,
+  SetupRailOrnaments,
   Starcut,
   WaykeeperButton,
   waykeeperAssets,
@@ -732,7 +733,7 @@ export function TaskIntakePanel({
           <InspectorDisclosure
             countLabel={`${carryForwardCount}`}
             defaultOpen
-            label="Overflow result"
+            label="Deferred tasks"
             title="Carried forward"
           >
             <ul className="space-y-2">
@@ -750,8 +751,8 @@ export function TaskIntakePanel({
           <InspectorDisclosure
             countLabel={`${overflowCount}`}
             defaultOpen
-            label="Honest overflow"
-            title="Still unplaced today"
+            label="Deferred today"
+            title="Needs a later route"
           >
             <ul className="space-y-2">
               {draftScheduleResponse?.unplacedTasks.map((task) => (
@@ -893,15 +894,9 @@ function DaySetupConcept({
       data-testid="task-intake-panel"
       className="overflow-hidden rounded-[8px] border border-[rgba(255,247,214,0.18)] bg-[color:var(--wk-paper)] shadow-[0_30px_90px_rgba(3,8,34,0.28)]"
     >
-      <form className="grid min-h-[42rem] lg:grid-cols-[8.5rem_minmax(0,1fr)_18rem]" onSubmit={onSubmit} noValidate>
+      <form className="grid min-h-[42rem] lg:grid-cols-[11.5rem_minmax(0,1fr)] xl:grid-cols-[11.5rem_minmax(0,1fr)_18rem]" onSubmit={onSubmit} noValidate>
         <aside className="relative hidden overflow-hidden bg-[color:var(--wk-ink)] p-5 text-white lg:block">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70">
-            <BotanicalGlyph className="absolute -left-7 top-20 h-36 w-24" tone="jade" />
-            <BotanicalGlyph className="absolute -right-10 top-64 h-44 w-28" tone="blue" />
-            <BotanicalGlyph className="absolute -left-5 bottom-36 h-40 w-24" tone="violet" />
-            <Starcut className="absolute left-5 top-10 size-7" />
-            <Starcut className="absolute bottom-52 right-5 size-6" />
-          </div>
+          <SetupRailOrnaments variant="dark" />
           <ol className="relative z-10 space-y-5 text-sm">
             {setupSteps.map(([number, label, note], index) => (
               <li key={label}>
@@ -929,11 +924,6 @@ function DaySetupConcept({
               </li>
             ))}
           </ol>
-          <div className="absolute bottom-0 left-0 right-0 h-40 overflow-hidden">
-            <BotanicalGlyph className="absolute bottom-4 left-4 h-24 w-16" tone="jade" />
-            <BotanicalGlyph className="absolute bottom-2 left-14 h-32 w-20" tone="blue" />
-            <Starcut className="absolute bottom-24 left-5 size-7" />
-          </div>
         </aside>
 
         <div className="space-y-6 p-6 md:p-8">
@@ -1307,11 +1297,7 @@ function DaySetupConcept({
         </div>
 
         <aside className="relative hidden overflow-hidden border-l border-[rgba(14,20,51,0.1)] bg-[rgba(255,252,244,0.7)] p-5 xl:block">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70">
-            <BotanicalGlyph className="absolute -right-8 top-16 h-44 w-28" tone="blue" />
-            <BotanicalGlyph className="absolute -left-5 bottom-28 h-44 w-28" tone="jade" />
-            <Starcut className="absolute right-8 top-80 size-8" />
-          </div>
+          <SetupRailOrnaments variant="paper" />
           <div
             className="relative z-10 rounded-[8px] border border-[rgba(14,20,51,0.1)] bg-white/78 p-4"
             data-testid="waykeeper-profile-summary"

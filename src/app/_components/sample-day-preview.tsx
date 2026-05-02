@@ -49,7 +49,7 @@ const samplePersonas: Record<
     promises: [
       { tone: "blue", title: "Study first", value: "Put the hardest work before class and admin." },
       { tone: "green", title: "Breaks included", value: "Meals and reset time stay on the route." },
-      { tone: "violet", title: "Overflow shown", value: "Lower-priority work can move instead of disappearing." },
+      { tone: "violet", title: "Deferred tasks", value: "Lower-priority work can move instead of disappearing." },
     ],
     title: "A student day with real deadlines",
     waypoints: [
@@ -269,7 +269,7 @@ export function SampleDayPreview({
                 Breaks, meals, and errands kept visible.
               </ExperienceItem>
               <ExperienceItem icon={<Starcut className="size-8" />}>
-                Overflow shown instead of hidden.
+                Deferred tasks stay visible.
               </ExperienceItem>
               <ExperienceItem icon={<BotanicalGlyph className="h-9 w-7" tone="violet" />}>
                 Fixed meetings and calls respected.

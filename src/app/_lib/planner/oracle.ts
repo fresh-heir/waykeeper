@@ -287,7 +287,7 @@ export function buildOracleBuildEvent({
       : `Protected ${nextDayPlan.blocks.filter((block) => block.locked).length} locked anchor${nextDayPlan.blocks.filter((block) => block.locked).length === 1 ? "" : "s"} while arranging flexible work around them.`,
     routeCarryForwardItems.length > 0 || routeUnplacedTasks.length > 0
       ? `${routeCarryForwardItems.length + routeUnplacedTasks.length} task${routeCarryForwardItems.length + routeUnplacedTasks.length === 1 ? "" : "s"} still sit outside the clean route, and Oracle is showing that plainly.`
-      : "Everything currently fits inside today without hidden overflow.",
+      : "Everything currently fits inside today without hidden deferred work.",
   ];
 
   if (usedLocalFallback) {
@@ -591,7 +591,7 @@ function buildNowInsights({
 
   if (routeCarryForwardItems.length > 0 || routeUnplacedTasks.length > 0) {
     insights.push(
-      "Today is already overloaded in places. Protect the placed route first and let overflow stay explicit."
+      "Today is already overloaded in places. Protect the placed route first and let deferred tasks stay explicit."
     );
   }
 
@@ -662,7 +662,7 @@ function buildOverflowDifferenceLine({
   }
 
   if (nextCount === 0) {
-    return "It keeps everything inside today instead of leaving visible overflow.";
+    return "It keeps everything inside today instead of leaving deferred tasks visible.";
   }
 
   if (nextCount < currentCount) {

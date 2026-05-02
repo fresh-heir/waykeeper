@@ -56,7 +56,8 @@ Product read as of 2026-05-01:
 - GitHub and production deployment are now connected:
   the repo is pushed to `https://github.com/fresh-heir/waykeeper`, and the production app is live at `https://waykeeper.vercel.app`
 - post-submission polish added persistent multi-plan drafts, live timezone-sensitive welcome/date settings, nested fixed-anchor handling, vertical profile art, contained route sidebar navigation, and a fixed viewport bottom navigation
-- active countdown now fills counterclockwise from 0 using elapsed time, with label collision removed
+- active countdown now starts filled from 0 to the block duration, then drains clockwise toward 0, with label collision removed
+- soft time-based scheduling heuristics now infer obvious meals, day parts, business-hour tasks, prep-before-target ordering, laundry sequencing, and grocery-before-cooking flow without overriding explicit anchors or user locks
 - this workspace is no longer the daily execution tracker for submission; future work should move into a post-submission polish tracker or GitHub issues
 
 Current verification read:
@@ -89,6 +90,9 @@ Current verification read:
 - manual production smoke passed on 2026-04-29:
   normal welcome first, dev tools hidden, How It Works modal opens, Working Professional sample builds, active countdown appears, Share route variants are present, Light/Dark toggle works, and Start today's plan reaches guided intake
 - `npm run lint` passed on 2026-05-01 after the floating route nav and countdown-fill patch
+- `npm run check:planner` passed on 2026-05-01 after the time-affinity scheduling patch
+- `npm run lint` passed on 2026-05-01 after the time-affinity scheduling patch
+- `npm run build` passed on 2026-05-01 after the time-affinity scheduling patch
 
 Workspace upkeep:
 - daily thread-heartbeat automation created on 2026-04-22
@@ -203,8 +207,10 @@ Core product stance for this redesign:
   source at `https://github.com/fresh-heir/waykeeper`, production at `https://waykeeper.vercel.app`.
 - 2026-05-01: Multiple local plan drafts can persist at once, reload from the floating route menu, and remain until explicitly deleted.
 - 2026-05-01: Welcome date/time should be live and timezone-sensitive unless the user is resuming a saved route.
-- 2026-05-01: The active countdown should fill counterclockwise from 0 using elapsed time; remaining time remains the readable text headline.
+- 2026-05-01: The active countdown should start filled from 0 to the block duration and drain clockwise toward 0; remaining time remains the readable text headline.
 - 2026-05-01: Bottom route navigation should behave like a viewport HUD via portal, not like page content.
+- 2026-05-01: Soft time-affinity heuristics may shape deterministic placement for obvious meal, day-part, prep, sequence, and business-hour tasks; explicit anchors, due times, and user locks remain stronger.
+- 2026-05-01: Profile choices remain visible local metadata for summary/share copy; scheduling intelligence is limited to obvious task text and time semantics until there is a clearer post-submission model.
 - 2026-05-01: The daily workspace heartbeat is retired after the submission deadline and deploy packaging.
 
 ## Moodboard inputs
@@ -688,7 +694,7 @@ Current recommendation:
   sociology reading response, calculus problem set, Q2 client update, launch metrics, launch email draft, pricing page copy, and product demo clips.
 - Aligned sample preview labels with the scenario data that actually builds for each persona.
 - Upgraded the lightweight local profile summary so journey, priorities, rhythm, and preferred day style visibly shape the right-side profile card.
-- Added `daily_brief` as the default share/export format with `Today's shape`, `Now / Next`, `Schedule`, `Oracle note`, `Overflow / carry-forward`, and `How to use this` sections.
+- Added `daily_brief` as the default share/export format with `Today's shape`, `Now / Next`, `Schedule`, `Oracle note`, `Deferred tasks / carry-forward`, and `How to use this` sections.
 - Renamed the export panel to `Share route` and kept LLM-ready/raw schedule variants available as secondary options.
 - Added focused test coverage for daily brief default behavior, persona-specific sample tasks, and persisted profile summary fields.
 - Restored the full Chromium e2e QA path under full local access and confirmed Chrome / Chrome for Testing no longer crash at launch.
@@ -699,7 +705,7 @@ Current recommendation:
 - Verified the full non-real-AI QA suite:
   `npm run test:e2e:qa` now passes with 70 passing tests and 3 intentionally skipped real-AI smoke tests.
 - Added a compact active-block countdown timer to the route waypoint list:
-  the header reads `remaining of`, 0 sits at noon, and timer labels step down clockwise from the block duration.
+  the header reads `remaining of`, 0 sits at noon, labels climb counterclockwise, and the colored field drains clockwise toward 0.
 - Added local live/manual planner time mode:
   real start-today routes can tick from the browser clock, while sample/dev/manual flows remain deterministic.
 - Switched the production build script to `next build --webpack` after packaged `next start` exposed a missing Turbopack runtime chunk.
@@ -716,11 +722,13 @@ Current recommendation:
 - Fixed Waykeeper mark layering, contained the route sidebar navigation, and replaced the small profile art with a taller vertical set piece.
 - Allowed nested fixed anchors, such as a 9-5 clinic block with a 12-1 lunch meeting inside it, without splitting the long anchor.
 - Added launch helper assets and submission image files for GitHub/Vercel handoff.
-- Fixed the bottom route menu to render as a viewport HUD and corrected the active countdown so it fills counterclockwise from 0 using elapsed time.
+- Fixed the bottom route menu to render as a viewport HUD and corrected the active countdown so it starts filled from 0 to the block duration and drains clockwise toward 0.
+- Added soft time-affinity scheduling:
+  meals land near meal windows, prep tasks try to happen before matching events/tasks, calls and errands prefer business hours, and impossible preferred windows fall back instead of disappearing.
 
 ## Next up
 
-- If work continues after submission, open a post-submission polish tracker and triage remaining UX ideas into bugs versus enhancements.
+- Do a quick browser spot-check with dinner, prepare-before-event, and business-hour examples, then decide whether to commit and push this heuristic pass.
 
 ## Change log
 
@@ -752,3 +760,4 @@ Current recommendation:
 - 2026-04-28: Added active-route countdown timer planning/implementation notes and live-real-day time-mode decision.
 - 2026-04-29: Froze feature scope, switched production build to Webpack for stable packaging, captured final screenshots, wrote submission copy, and verified lint, planner regression, production build, e2e QA, and manual production smoke.
 - 2026-05-01: Recorded GitHub/Vercel production state, persistent drafts, live timezone/date settings, nested fixed-anchor handling, launch helpers, and final floating-nav/countdown polish; retired the daily workspace heartbeat.
+- 2026-05-01: Added soft time-affinity heuristics for meals, day parts, prep ordering, business-hour tasks, simple sequences, and Oracle replan preservation; verified planner, lint, and build.

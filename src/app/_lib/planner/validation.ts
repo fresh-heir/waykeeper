@@ -523,7 +523,7 @@ function validateTaskAccounting(
         remainingCarriedForwardMinutes > TASK_MINUTE_TOLERANCE ||
         carryForwardItem
       ) {
-        warnings.push(`"${task.title}" is completed but still appears in remaining overflow work.`);
+        warnings.push(`"${task.title}" is completed but still appears in remaining deferred work.`);
       }
 
       return;
@@ -535,7 +535,7 @@ function validateTaskAccounting(
       }
 
       if (unplacedTask || carryForwardItem) {
-        warnings.push(`"${task.title}" was skipped but still appears in remaining overflow work.`);
+        warnings.push(`"${task.title}" was skipped but still appears in remaining deferred work.`);
       }
 
       return;

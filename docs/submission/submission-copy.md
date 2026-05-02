@@ -12,7 +12,7 @@ Short description:
 Waykeeper turns a messy same-day task dump into a realistic route, then helps you stay oriented as the day changes.
 
 Longer description:
-Waykeeper is a one-day planning tool for people whose days do not fit neatly into a calendar. Paste a chaotic task list, add real constraints, and Waykeeper turns it into a readable route with focus blocks, breaks, overflow, and a calm Oracle side panel for what matters now and what should happen next.
+Waykeeper is a one-day planning tool for people whose days do not fit neatly into a calendar. Paste a chaotic task list, add real constraints, and Waykeeper turns it into a readable route with focus blocks, breaks, deferred tasks, and a calm Oracle side panel for what matters now and what should happen next.
 
 AI usage:
 AI helps interpret messy task input, draft or refine a believable schedule, and explain route changes. The app keeps a validated local route usable first, and AI refinements are explicit rather than silently replacing the visible plan.

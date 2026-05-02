@@ -64,9 +64,11 @@ export interface PlannerAiParseTaskTransport {
 
 export interface PlannerAiSchedulingTaskTransport
   extends PlannerAiParseTaskTransport {
+  beforeTaskIds?: string[];
   hardStartTime?: string;
   hardEndTime?: string;
   routeContext?: RouteFlowContext;
+  timeAffinityLabel?: string;
   carryForward?: boolean;
   carriedFromDate?: string;
   carryForwardStatus?: Task["carryForwardStatus"];

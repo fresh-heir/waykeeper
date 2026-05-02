@@ -127,6 +127,7 @@ const plannerAiResponseTaskSchema = z
     delayedCount: z.number().int().min(0).nullish(),
     energyLevel: energyLevelSchema,
     dueAt: z.string().nullish(),
+    beforeTaskIds: z.array(z.string().min(1)).nullish(),
     hardStartTime: z.string().nullish(),
     hardEndTime: z.string().nullish(),
     carryForward: z.boolean().nullish(),
@@ -135,6 +136,7 @@ const plannerAiResponseTaskSchema = z
     carryForwardStatus: carryForwardStatusSchema.nullish(),
     notes: z.string().nullish(),
     source: sourceTagSchema.nullish(),
+    timeAffinityLabel: z.string().min(1).nullish(),
   })
   .strict();
 
@@ -151,12 +153,14 @@ export const plannerAiPayloadTaskSchema = z
     deferrable: z.boolean(),
     energyLevel: energyLevelSchema,
     dueAt: z.string().optional(),
+    beforeTaskIds: z.array(z.string().min(1)).optional(),
     hardStartTime: z.string().optional(),
     hardEndTime: z.string().optional(),
     carryForward: z.boolean().optional(),
     carriedFromDate: z.string().optional(),
     carryForwardStatus: carryForwardStatusSchema.optional(),
     routeContext: plannerAiRouteFlowContextSchema.optional(),
+    timeAffinityLabel: z.string().min(1).optional(),
   })
   .strict();
 
